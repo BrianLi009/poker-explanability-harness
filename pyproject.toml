@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "poker-explainability-harness"
-version = "0.1.0"
+version = "0.2.0"
 description = "Turn GTO Wizard tournament spots into coach-style explanations (preflop, postflop, ICM). Explains; doesn't solve."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,7 +17,12 @@ dev = ["pytest>=7"]
 [project.scripts]
 poker-harness = "poker_harness.cli:main"
 
+# The package lives inside the Claude skill so the skill is self-contained.
+[tool.setuptools.package-dir]
+"" = "skills/explain-poker-spot/scripts"
+
 [tool.setuptools.packages.find]
+where = ["skills/explain-poker-spot/scripts"]
 include = ["poker_harness*"]
 
 [tool.setuptools.package-data]

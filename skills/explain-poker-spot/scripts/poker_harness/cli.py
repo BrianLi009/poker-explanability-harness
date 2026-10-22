@@ -1,4 +1,4 @@
-"""Command line: ``python -m poker_harness <command> ...``.
+"""Command line: ``python3 scripts/harness.py <command> ...`` (or ``python -m poker_harness`` once installed).
 
 Commands
 --------

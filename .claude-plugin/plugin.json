@@ -1,0 +1,12 @@
+{
+  "name": "poker-explainer",
+  "version": "0.2.0",
+  "description": "Explains tournament poker spots from GTO Wizard the way a good coach would: preflop and postflop breakdowns, ICM pressure, blockers, and the one lesson to take away. Explains the solver's strategy; doesn't solve.",
+  "author": {
+    "name": "BrianLi009"
+  },
+  "homepage": "https://github.com/BrianLi009/poker-explanability-harness",
+  "repository": "https://github.com/BrianLi009/poker-explanability-harness",
+  "license": "MIT",
+  "keywords": ["poker", "gto-wizard", "icm", "tournament", "mtt", "hand-review", "coaching"]
+}

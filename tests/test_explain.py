@@ -7,7 +7,7 @@ from poker_harness import explain, load_spot, validate
 from poker_harness.brief import build_brief, check_explanation
 from poker_harness.cli import main
 
-EX = Path(__file__).resolve().parent.parent / "examples"
+EX = Path(__file__).resolve().parent.parent / "skills" / "explain-poker-spot" / "examples"
 RIVER = EX / "river_five_flush_shove.json"
 PREFLOP = EX / "preflop_sb_vs_lj_open.json"
 

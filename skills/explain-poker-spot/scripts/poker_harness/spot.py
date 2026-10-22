@@ -1,6 +1,6 @@
 """The spot: everything you read off GTO Wizard for one decision.
 
-A spot is plain JSON (see ``docs/spot-schema.md``). This module loads it,
+A spot is plain JSON (see ``references/spot-schema.md`` in the skill). This module loads it,
 normalises frequencies (GTO Wizard shows percentages; 0.545 and 54.5 are both
 accepted) and gives the explanation builders typed access.
 """

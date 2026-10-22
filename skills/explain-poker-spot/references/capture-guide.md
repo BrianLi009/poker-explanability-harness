@@ -18,16 +18,17 @@ The harness explains; GTO Wizard solves. This guide maps each framework point to
 
 ## Faster capture with the Summary script
 
-`capture/gtowizard_summary.js` reads the Summary tab for the node you're on (all combos, scrolling the virtual table for you) and prints:
+`scripts/gtowizard_summary.js` reads the Summary tab for the node you're on (all combos, scrolling the virtual table for you) and returns JSON with:
 
 * `node.actions`: the range-weighted action frequencies,
 * `hands`: one row per hand class (combo-weighted strategy, EV, weight),
-* `combos`: every combo row with its exact suits.
+* `columns` / `ev_column`: which columns the table had (EV in chip-EV solutions, CSTE in ICM solutions),
+* `combos`: every combo row with its exact suits (call `gwCaptureSummary({ includeCombos: true })`; useful on the river, where suits matter).
 
-Open the node, click **Summary** with no hand selected, open the browser console and paste the script. It only reads the page; nothing is sent anywhere. If GTO Wizard changes its page structure, the two selectors at the top of the script are what to update.
+Open the node, click **Summary** with no hand selected, then run the script: paste it into the browser console, or let Claude run it with the page JavaScript tool. It only reads the page; nothing is sent anywhere. Action names come back with their sizing label, e.g. `Allin 21 (207%)`. If GTO Wizard changes its page structure, the two selectors at the top of the script are what to update.
 
 ## Tips from building the examples
 
 * **Always capture the response.** The single most common wrong explanation is reasoning about a bet without looking at how the opponent responds. In the river example, it looked like SB's chop hands shove to fold out LJ's chops; the response node showed LJ calls 83.7%, and the real reason only appeared on the check line.
 * **Rewind the line for fractional weights.** A 0.22 weight on a nut-flush combo is the product of earlier-street frequencies (0.286 × 0.771). The rewind table shows which street removed it.
-* **Check the numbers add up.** `python -m poker_harness validate spot.json` flags action frequencies that don't sum to 100% and seat names that don't match the table. In the preflop example, the harness's card-removal maths reproduces GTO Wizard's 69.4% LJ fold frequency from the class rows, which is a good sign the capture is complete; when it doesn't match, a row is usually missing.
+* **Check the numbers add up.** `python3 scripts/harness.py validate spot.json` flags action frequencies that don't sum to 100% and seat names that don't match the table. In the preflop example, the harness's card-removal maths reproduces GTO Wizard's 69.4% LJ fold frequency from the class rows, which is a good sign the capture is complete; when it doesn't match, a row is usually missing.
