@@ -1,0 +1,158 @@
+{
+  "module": "postflop",
+  "title": "SB river shove on K♠J♠6♠8♠Q♠ (MTT, ICM)",
+  "source": "GTO Wizard AI solution, MTT General ICM 9-max, 200 players, 50% left. Numbers captured from the Strategy+EV, Breakdown, Equity chart, Summary and Actions tabs on 2026-10-22.",
+  "format": {
+    "game": "MTT",
+    "structure": "9-max, 200 entrants",
+    "phase": "50% of the field left",
+    "icm": true
+  },
+  "table": [
+    {"seat": "UTG", "stack": 30.125},
+    {"seat": "UTG1", "stack": 43.125},
+    {"seat": "UTG2", "stack": 35.125},
+    {"seat": "LJ", "stack": 42.125},
+    {"seat": "HJ", "stack": 45.125},
+    {"seat": "CO", "stack": 40.125},
+    {"seat": "BTN", "stack": 90.125},
+    {"seat": "SB", "stack": 25.125},
+    {"seat": "BB", "stack": 100.125}
+  ],
+  "hero": "SB",
+  "villain": "LJ",
+  "history": [
+    {"street": "preflop", "actions": "folds to LJ, LJ raises to 2, folds to SB, SB calls, BB folds"},
+    {"street": "flop", "board": "KsJs6s", "actions": "SB checks, LJ checks"},
+    {"street": "turn", "board": "8s", "actions": "SB checks, LJ bets 2 (33%), SB calls"},
+    {"street": "river", "board": "Qs", "actions": "SB to act"}
+  ],
+  "board": "KsJs6s8sQs",
+  "pot": 10.125,
+  "stacks_behind": {"SB": 21, "LJ": 38},
+  "bet": {"size": 21, "pot_before": 10.125},
+
+  "node": {
+    "player": "SB",
+    "actions": {"Allin 21": 54.5, "Bet 2.5": 0.0, "Check": 45.5},
+    "combos": {"Allin 21": 27.2, "Bet 2.5": 0.01, "Check": 22.71}
+  },
+
+  "hero_hand": {
+    "hand": "AsTs",
+    "label": "Royal flush",
+    "strategy": {"Allin 21": 96.9, "Bet 2.5": 0.0, "Check": 3.1},
+    "ev": {"Allin 21": 27.18, "Bet 2.5": 23.11, "Check": 27.09}
+  },
+
+  "hands": [
+    {"hand": "22", "strategy": {"Allin 21": 100, "Check": 0}},
+    {"hand": "33", "strategy": {"Allin 21": 100, "Check": 0}},
+    {"hand": "44", "strategy": {"Allin 21": 100, "Check": 0}},
+    {"hand": "55", "strategy": {"Allin 21": 100, "Check": 0}},
+    {"hand": "66", "strategy": {"Allin 21": 100, "Check": 0}},
+    {"hand": "54s", "strategy": {"Allin 21": 100, "Check": 0}},
+    {"hand": "65s", "strategy": {"Allin 21": 100, "Check": 0}},
+    {"hand": "KQs", "strategy": {"Allin 21": 0, "Check": 100}},
+    {"hand": "KQo", "strategy": {"Allin 21": 0, "Check": 100}},
+    {"hand": "KJo", "strategy": {"Allin 21": 0, "Check": 100}},
+    {"hand": "AsTs", "label": "Royal flush", "strategy": {"Allin 21": 96.9, "Check": 3.1}}
+  ],
+
+  "equity": {
+    "SB": {"combos": 49.9, "equity": 48.56, "eqr": 87},
+    "LJ": {"combos": 100.5, "equity": 51.44, "eqr": 104}
+  },
+  "breakdown": {
+    "SB": [
+      {"category": "Straight flush", "pct": 2.4, "combos": 1.2},
+      {"category": "Flush (beats the board)", "pct": 12.7, "combos": 6.4},
+      {"category": "No made hand (plays the board)", "pct": 84.9, "combos": 42.4}
+    ],
+    "LJ": [
+      {"category": "Straight flush", "pct": 1.2, "combos": 1.2},
+      {"category": "Flush (beats the board)", "pct": 16.3, "combos": 16.4},
+      {"category": "No made hand (plays the board)", "pct": 82.5, "combos": 82.9}
+    ]
+  },
+
+  "response": {
+    "player": "LJ",
+    "facing": "Allin 21",
+    "pot_odds": 40.3,
+    "actions": {"Call": 83.7, "Fold": 16.3},
+    "hands": [
+      {"hand": "AsAh", "label": "Nut flush", "weight": 0.01, "equity": 96.9, "strategy": {"Call": 100, "Fold": 0}, "ev": {"Call": 27.83, "Fold": 0}},
+      {"hand": "AhAd", "label": "Plays the board", "weight": 0.88, "equity": 41.3, "strategy": {"Call": 100, "Fold": 0}, "ev": {"Call": 0.36, "Fold": 0}},
+      {"hand": "AsTs", "label": "Royal flush", "weight": 0.5, "equity": 100, "strategy": {"Call": 100, "Fold": 0}, "ev": {"Call": 29.4, "Fold": 0}},
+      {"hand": "7s7h", "label": "7-high flush", "weight": 0.26, "equity": 87.0, "strategy": {"Call": 100, "Fold": 0}, "ev": {"Call": 22.78, "Fold": 0}}
+    ]
+  },
+
+  "alternatives": [
+    {
+      "line": "SB checks instead",
+      "steps": [
+        {"player": "LJ", "actions": {"Allin 21": 73.1, "Bet 10.1": 11.0, "Bet 3.3": 2.3, "Check": 13.6}},
+        {"player": "SB", "facing": "Allin 21", "actions": {"Call": 24.5, "Fold": 75.5}}
+      ]
+    }
+  ],
+
+  "rewind": {
+    "player": "LJ",
+    "steps": ["Flop check", "Turn bet 2bb"],
+    "rows": [
+      {"hand": "AsTs", "label": "Royal flush", "freqs": [60.0, 82.7], "weight": 0.50},
+      {"hand": "Ts9s", "label": "Straight flush", "freqs": [73.8, 92.4], "weight": 0.68},
+      {"hand": "AsAh", "label": "Nut flush", "freqs": [1.4, 99.2], "weight": 0.01},
+      {"hand": "AsKh", "label": "Nut flush", "freqs": [28.6, 77.1], "weight": 0.22},
+      {"hand": "AsQh", "label": "Nut flush", "freqs": [63.6, 76.4], "weight": 0.49},
+      {"hand": "AsJh", "label": "Nut flush", "freqs": [85.3, 55.6], "weight": 0.47},
+      {"hand": "AsTh", "label": "Nut flush", "freqs": [7.3, 99.1], "weight": 0.07},
+      {"hand": "As9h", "label": "Nut flush", "freqs": [73.5, 94.7], "weight": 0.70},
+      {"hand": "As9s", "label": "Nut flush", "freqs": [19.9, 98.4], "weight": 0.20},
+      {"hand": "As7s", "label": "Nut flush", "freqs": [75.9, 96.9], "weight": 0.74},
+      {"hand": "As5s", "label": "Nut flush", "freqs": [57.4, 97.7], "weight": 0.56},
+      {"hand": "As4s", "label": "Nut flush", "freqs": [85.8, 85.2], "weight": 0.73},
+      {"hand": "As3s", "label": "Nut flush", "freqs": [70.6, 89.9], "weight": 0.63},
+      {"hand": "As2s", "label": "Nut flush", "freqs": [64.7, 91.8], "weight": 0.59},
+      {"hand": "AhTs", "label": "T-high flush", "freqs": [57.9, 64.5], "weight": 0.37},
+      {"hand": "TsTh", "label": "T-high flush", "freqs": [65.0, 98.8], "weight": 0.64},
+      {"hand": "KhTs", "label": "T-high flush", "freqs": [40.1, 7.8], "weight": 0.03},
+      {"hand": "QhTs", "label": "T-high flush", "freqs": [96.7, 53.8], "weight": 0.09},
+      {"hand": "JhTs", "label": "T-high flush", "freqs": [98.3, 8.2], "weight": 0.03},
+      {"hand": "Ah9s", "label": "9-high flush", "freqs": [51.3, 44.3], "weight": 0.23},
+      {"hand": "9s9h", "label": "9-high flush", "freqs": [89.6, 76.7], "weight": 0.69},
+      {"hand": "7s7h", "label": "7-high flush", "freqs": [85.5, 30.5], "weight": 0.26}
+    ]
+  },
+
+  "ranges": {
+    "LJ": {
+      "AsTs": 0.50, "Ts9s": 0.68,
+      "AsAh": 0.01, "AsAd": 0.01, "AsAc": 0.01,
+      "AsKh": 0.22, "AsKd": 0.22, "AsKc": 0.22,
+      "AsQh": 0.49, "AsQd": 0.49, "AsQc": 0.49,
+      "AsJh": 0.47, "AsJd": 0.47, "AsJc": 0.47,
+      "AsTh": 0.07, "AsTd": 0.07, "AsTc": 0.07,
+      "As9h": 0.70, "As9d": 0.70, "As9c": 0.70,
+      "As9s": 0.20, "As7s": 0.74, "As5s": 0.56, "As4s": 0.73, "As3s": 0.63, "As2s": 0.59,
+      "AhTs": 0.37, "AdTs": 0.37, "AcTs": 0.37,
+      "TsTh": 0.64, "TsTd": 0.64, "TsTc": 0.64,
+      "KhTs": 0.03, "KdTs": 0.03, "KcTs": 0.03,
+      "QhTs": 0.09, "QdTs": 0.09, "QcTs": 0.09,
+      "JhTs": 0.03, "JdTs": 0.03, "JcTs": 0.03,
+      "Ah9s": 0.23, "Ad9s": 0.23, "Ac9s": 0.23,
+      "9s9h": 0.69, "9s9d": 0.69, "9s9c": 0.69,
+      "7s7h": 0.26, "7s7d": 0.26, "7s7c": 0.26
+    }
+  },
+  "ranges_partial": ["LJ"],
+
+  "notes": [
+    "LJ's range above lists only the 17.5 combos that beat the board; the other 82.9 combos play the board.",
+    "SB's per-hand rows are read from the strategy grid colours: cells that looked pure are recorded as 100/0.",
+    "QhTs and JhTs are only partly in LJ's preflop opening range, which is why their observed weight is below the flop x turn product."
+  ]
+}

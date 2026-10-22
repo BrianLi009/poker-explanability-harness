@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "poker-explainability-harness"
+version = "0.1.0"
+description = "Turn GTO Wizard tournament spots into coach-style explanations (preflop, postflop, ICM). Explains; doesn't solve."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+poker-harness = "poker_harness.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["poker_harness*"]
+
+[tool.setuptools.package-data]
+poker_harness = ["prompts/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
