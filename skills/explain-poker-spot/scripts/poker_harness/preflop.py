@@ -13,6 +13,7 @@ from .cards import RANKS, class_combos, hand_class, parse_cards
 from .framework import TITLES, Report, Section
 from .sections import (
     Context,
+    actions_line,
     alternatives_section,
     blockers_section,
     decision_section,
@@ -138,49 +139,110 @@ def family_patterns_section(ctx: Context) -> Section | None:
     return Section("outliers", "Hand-family patterns", "\n\n".join(parts), {"findings": findings, "sizing": sizing}, inference=True)
 
 
+def _neighbours(cls: str) -> list[str]:
+    """Same-family hands one step stronger and weaker (A4s -> A5s, A3s; 77 -> 88, 66)."""
+    out = []
+    if len(cls) == 2:
+        r = RANKS.index(cls[0])
+        for d in (1, -1):
+            if 0 <= r + d < 13:
+                out.append(RANKS[r + d] * 2)
+        return out
+    hi, lo, kind = cls[0], RANKS.index(cls[1]), cls[2:]
+    for d in (1, -1):
+        k = lo + d
+        if 0 <= k < RANKS.index(hi):
+            out.append(hi + RANKS[k] + kind)
+    return out
+
+
+def _hand_cards(h: str) -> list[int]:
+    return parse_cards(h) if len(h) == 4 and h[1] in "cdhs" else list(class_combos(h)[0])
+
+
 def preflop_blockers_section(ctx: Context) -> Section | None:
     s = ctx.spot
     vr = s.ranges.get(s.villain)
     if not s.hero_hand or vr is None:
         return None
     h = s.hero_hand.hand
-    hero = parse_cards(h) if len(h) == 4 and h[1] in "cdhs" else list(class_combos(h)[0])
+    hero = _hand_cards(h)
     before = vr.by_class()
     after = vr.without(hero).by_class()
     tot_b, tot_a = sum(before.values()), sum(after.values())
     lines = []
     facts: dict = {"removed": tot_b - tot_a, "total": tot_b}
-    # Split the opponent's range by how it responds, if the response node has class rows.
     resp = s.response
-    if resp and resp.hands:
-        cont_key = next((a for a in resp.actions if not a.lower().startswith("fold")), None)
+    cont_key = next((a for a in resp.actions if not a.lower().startswith("fold")), None) if resp else None
+    if resp and resp.hands and cont_key:
         cont_of = {}
         for r in resp.hands:
             c = _class_of_row(r)
             if c:
-                cont_of[c] = r.strategy.get(cont_key, 0.0) / 100.0 if cont_key else 0.0
+                cont_of[c] = r.strategy.get(cont_key, 0.0) / 100.0
+
         def split(by_cls: dict[str, float]) -> tuple[float, float]:
             cont = sum(w * cont_of.get(c, 0.0) for c, w in by_cls.items())
             return cont, sum(by_cls.values()) - cont
+
+        def removal(cards: list[int]) -> tuple[float, float, float]:
+            ca, fa = split(vr.without(cards).by_class())
+            return 100 * (cb - ca) / cb, 100 * (fb - fa) / fb, 100 * fa / (ca + fa)
+
         cb, fb = split(before)
-        ca, fa = split(after)
         if cb > 0 and fb > 0:
-            rc, rf = 100 * (cb - ca) / cb, 100 * (fb - fa) / fb
             p_before = 100 * fb / (cb + fb)
-            p_after = 100 * fa / (ca + fa)
+            rc, rf, p_after = removal(hero)
             facts.update(cont_removed_pct=rc, fold_removed_pct=rf, fold_before=p_before, fold_after=p_after)
+            verb = cont_key.split()[0].lower()
             lines.append(
-                f"Holding {pretty_hand(h)} removes {pct(rc)} of {s.villain}'s {cont_key.lower()}ing combos but only {pct(rf)} of its folding combos. "
+                f"Holding {pretty_hand(h)} removes {pct(rc)} of {s.villain}'s {verb}ing combos but {pct(rf)} of its folding combos. "
                 f"That moves {s.villain}'s fold frequency from {pct(p_before)} (no card removal) to {pct(p_after)} against this hand."
-                if cont_key else ""
             )
+            node_fold = next((v for a, v in resp.actions.items() if a.lower().startswith("fold")), None)
+            if node_fold is not None:
+                if abs(node_fold - p_before) <= 1.0:
+                    lines.append(
+                        f"_Check: rebuilt from the captured rows, {s.villain} folds {pct(p_before)}, matching GTO Wizard's {pct(node_fold)}, so the rows are complete._"
+                    )
+                else:
+                    ctx.spot.data.setdefault("_warnings", []).append(
+                        f"Response rows rebuild a {pct(p_before)} fold frequency but the node shows {pct(node_fold)}: some {verb}ing classes are probably missing from `response.hands` (unlisted classes count as folds)."
+                    )
             if rc > rf + 3:
-                ctx.lesson(6, f"{pretty_hand(h)} blocks {s.villain}'s continuing hands ({pct(rc)} removed) more than its folds ({pct(rf)}), which is what makes it a good candidate for aggression.")
+                ctx.lesson(6, f"{pretty_hand(h)} blocks {s.villain}'s continuing hands ({pct(rc)} removed) more than its folds ({pct(rf)}), which helps make it a candidate for aggression.")
             elif rf > rc + 3:
                 lines.append(f"{pretty_hand(h)} blocks more of {s.villain}'s folds than its continues, so it gets fewer folds than an average hand would.")
-            lines.append(
-                "_Fold frequencies here count only the opponent hands listed in the response rows; unlisted classes are treated as folds._"
-            )
+
+            # Compare with nearby hands, e.g. why A4s jams more than A5s.
+            compare = list(s.data.get("compare_hands") or [])
+            hero_cls = _class_of_row(s.hero_hand)
+            if not compare and hero_cls:
+                rows_by_cls = {_class_of_row(r): r for r in s.hands}
+                compare = [c for c in _neighbours(hero_cls) if c in rows_by_cls]
+            if compare:
+                aggr = [a for a in (s.node.actions if s.node else {}) if any(w in a.lower() for w in ("allin", "all-in", "jam", "shove", "raise"))]
+                rows_by_cls = {_class_of_row(r): r for r in s.hands}
+                table_rows = []
+                comp_facts = {}
+                for name in [h] + compare:
+                    cards = _hand_cards(name)
+                    c_rc, c_rf, c_fold = removal(cards)
+                    row = rows_by_cls.get(_class_of_row(HandRow(hand=name)))
+                    strat = actions_line({a: row.strategy.get(a, 0.0) for a in aggr}) if row and aggr else "–"
+                    table_rows.append([pretty_hand(name), pct(c_rc), pct(c_rf), pct(c_fold), strat])
+                    comp_facts[name] = {"cont_removed_pct": c_rc, "fold_removed_pct": c_rf, "villain_fold_pct": c_fold}
+                facts["compare"] = comp_facts
+                lines.append(
+                    "Compared with nearby hands:\n\n"
+                    + table(["Hand", f"{s.villain} {verb}s removed", "Folds removed", f"{s.villain} folds", "Aggressive actions"], table_rows)
+                )
+                folds = [v["villain_fold_pct"] for v in comp_facts.values()]
+                if max(folds) - min(folds) < 1.0:
+                    lines.append(
+                        "The fold frequencies are nearly identical, so card removal alone doesn't explain why these hands differ. "
+                        "The rest of the difference likely comes from how each hand does when called or when it calls instead (equity, playability); capture those nodes to show it."
+                    )
     rows = []
     for cls in sorted(before, key=lambda c: -before[c]):
         b, a = before[cls], after.get(cls, 0.0)
@@ -207,7 +269,7 @@ def explain_preflop(spot: Spot) -> Report:
         if hs and vs:
             eff = min(hs, vs)
     if eff:
-        scene.body += f"\n\n**Stack depth:** {eff:g}bb effective is {stack_regime(eff)}."
+        scene.body += f"\n\n**Stack depth:** {eff:g}bb effective. Typical of this depth in general (not read from this solution): {stack_regime(eff)}."
         scene.covered = True
     rep.add(scene)
     rep.add(ranges_section(ctx, preflop=True))

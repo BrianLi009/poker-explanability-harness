@@ -73,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if a.cmd == "check":
         report = explain(a.spot)
-        res = check_explanation(Path(a.explanation).read_text(), report)
+        res = check_explanation(Path(a.explanation).read_text(), report, source=load_spot(a.spot).data)
         print(json.dumps(res, indent=2))
         return 0
 

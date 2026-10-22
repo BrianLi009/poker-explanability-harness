@@ -4,7 +4,7 @@ The solver has already decided the strategy. Your job is only to explain **why**
 
 ## Framework
 
-Cover these points in order. Skip a point only if it is listed under `missing`, and in that case say in one line what the student should capture from GTO Wizard to complete it.
+Cover these points in order. Skip a point only if it is listed under `missing`, and in that case say in one line what the student should capture from GTO Wizard to complete it. For points listed under `partial`, cover what the data supports and say what's missing.
 
 {{CHECKLIST}}
 

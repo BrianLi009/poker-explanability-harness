@@ -27,11 +27,12 @@ def build_brief(report: Report) -> str:
         "module": facts["module"],
         "source": facts["source"],
         "sections": [
-            {"key": s["key"], "title": s["title"], "facts": s["facts"], "draft": s["body"], "inference": s["inference"]}
+            {"key": s["key"], "title": s["title"], "facts": s["facts"], "draft": s["body"], "inference": s["inference"], "partial": s["partial"]}
             for s in facts["sections"]
             if s["covered"]
         ],
-        "missing": [c["title"] for c in facts["coverage"] if not c["covered"]],
+        "missing": [c["title"] for c in facts["coverage"] if c["status"] == "missing"],
+        "partial": {c["title"]: c["note"] for c in facts["coverage"] if c["status"] == "partial"},
         "warnings": facts["warnings"],
     }
     checklist = "\n".join(f"{i + 1}. **{t}** ({k})" for i, (k, t, _) in enumerate(CHECKLIST))
@@ -71,32 +72,82 @@ def key_numbers(report: Report) -> dict[str, list[str]]:
     return out
 
 
-def check_explanation(text: str, report: Report) -> dict:
-    """Which framework points and key numbers a written explanation misses."""
+def _known_numbers(report: Report) -> set[float]:
+    """Every number the report states or computes, for spotting invented figures."""
+    text = report.to_markdown() + json.dumps(report.to_dict(), default=str)
+    return {float(n) for n in re.findall(r"\d+(?:\.\d+)?", text)}
+
+
+def _close(x: float, known: set[float]) -> bool:
+    return any(abs(x - k) <= 0.051 for k in known)
+
+
+def check_explanation(text: str, report: Report, source: dict | None = None) -> dict:
+    """Lint a written explanation against the report.
+
+    This is a coverage lint, not a correctness check: it can't tell a right
+    claim from a wrong one. It reports
+      * missing_points: covered framework points the text never touches,
+      * missing_numbers: sections where under half the key numbers appear,
+      * unsupported_numbers: percentages / bb figures that appear nowhere in
+        the report or the spot data (likely invented or mis-copied),
+      * too_short: under 150 words for a multi-point report.
+    """
     lowered = text.lower()
     present_nums = _numbers(text)
     hints = {
         "response": ["call", "fold", "respond", "response"],
-        "alternatives": ["instead", "if we check", "if sb checks", "other line", "alternative"],
-        "rewind": ["flop", "turn", "earlier street", "got here"],
+        "alternatives": ["instead", "if we check", "checks", "other line", "alternative", "small 3-bet", "3-bet", "if you"],
+        "rewind": ["flop", "turn", "earlier street", "got here", "filtered"],
         "blockers": ["block", "removal", "remove"],
-        "icm": ["icm", "bubble", "risk premium", "covers"],
-        "outliers": ["outlier", "while", "whereas", "instead of"],
-        "lesson": ["lesson", "takeaway", "remember"],
+        "icm": ["icm", "bubble", "risk premium", "covers", "bust"],
+        "outliers": ["outlier", "while", "whereas", "instead of", "unlike"],
     }
     missing_points = []
     for key, words in hints.items():
         sec = report.get(key)
         if sec and sec.covered and not any(w in lowered for w in words):
             missing_points.append(key)
+    # Lesson: a labelled takeaway, or a short closing paragraph.
+    paras = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+    last = paras[-1] if paras else ""
+    has_lesson = any(w in lowered for w in ("lesson", "takeaway", "remember", "rule of thumb", "at the table")) or (
+        0 < len(last.split()) <= 45 and len(paras) >= 3
+    )
+    if report.get("lesson") and not has_lesson:
+        missing_points.append("lesson")
+
     missing_numbers = {}
-    for key, nums in key_numbers(report).items():
-        absent = [n for n in nums if n not in present_nums and n.rstrip("0").rstrip(".") not in present_nums]
-        if absent and len(absent) == len(nums):
-            missing_numbers[key] = absent
+    keys = key_numbers(report)
+    present_frac = []
+    for key, nums in keys.items():
+        found = [n for n in nums if n in present_nums or n.rstrip("0").rstrip(".") in present_nums]
+        present_frac.append(len(found) / len(nums))
+        if len(found) * 2 < len(nums):
+            missing_numbers[key] = [n for n in nums if n not in found]
+
+    known = _known_numbers(report)
+    if source is not None:
+        known |= {float(n) for n in re.findall(r"\d+(?:\.\d+)?", json.dumps(source, default=str))}
+    stated = re.findall(r"(\d+(?:\.\d+)?)\s*(%|bb)", text)
+    unsupported = sorted({f"{n}{u}" for n, u in stated if not _close(float(n), known)})
+
+    words = len(text.split())
+    too_short = words < 150 and sum(1 for s in report.sections if s.covered) >= 6
+
     score = 1.0
-    covered = [s for s in report.sections if s.covered]
-    if covered:
-        score -= 0.5 * len(missing_points) / max(1, len(hints))
-        score -= 0.5 * len(missing_numbers) / max(1, len(key_numbers(report)) or 1)
-    return {"score": round(max(0.0, score), 2), "missing_points": missing_points, "missing_numbers": missing_numbers}
+    score -= 0.35 * len(missing_points) / (len(hints) + 1)
+    if present_frac:
+        score -= 0.35 * (1 - sum(present_frac) / len(present_frac))
+    score -= min(0.2, 0.05 * len(unsupported))
+    if too_short:
+        score = min(score, 0.5)
+    return {
+        "score": round(max(0.0, score), 2),
+        "missing_points": missing_points,
+        "missing_numbers": missing_numbers,
+        "unsupported_numbers": unsupported,
+        "too_short": too_short,
+        "words": words,
+        "note": "Coverage lint only: it can't verify that claims are correct. Reread blocker and line claims against the report.",
+    }

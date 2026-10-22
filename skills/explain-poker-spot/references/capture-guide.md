@@ -11,7 +11,7 @@ The harness explains; GTO Wizard solves. This guide maps each framework point to
 | Where the hand sits and its EV | **Hands** tab, hover the hand (EV per action); **Summary** tab row | `hero_hand` |
 | Outlier hands | **Summary** tab with no cell selected lists every combo; or read the grid | `hands` |
 | The opponent's response | Click the action in the header bar to move to the next node; read its Overview, pot odds and Summary | `response`, `bet` |
-| The other line | Pick the other action (e.g. Check) in the header and follow it one or two nodes | `alternatives` |
+| The other line | Pick each other action the hero's range uses (e.g. Check, or Call and the small 3-bet) in the header and follow it one or two nodes | `alternatives` (one entry per action) |
 | How the ranges got here | Go back to each earlier node, select the combo and read its frequency for the action actually taken | `rewind` |
 | Blockers | **Blockers** tab (value/trash removal) or the opponent's Summary rows with weights | `blockers_tab`, `ranges` |
 | ICM vs chip EV | Solution settings (ICM / ChipEV), payout structure | `icm_compare`, `format.payouts` |

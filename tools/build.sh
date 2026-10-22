@@ -8,7 +8,7 @@ rm -rf dist && mkdir -p dist
 find . -name __pycache__ -prune -exec rm -rf {} +
 
 zip -qr dist/poker-explainer.plugin .claude-plugin skills README.md LICENSE \
-  -x "*.DS_Store" -x "*/__pycache__/*" -x ".claude-plugin/marketplace.json"
-(cd skills && zip -qr ../dist/explain-poker-spot.zip explain-poker-spot -x "*.DS_Store" -x "*/__pycache__/*")
+  -x "*.DS_Store" -x "*/__pycache__/*" -x "*.egg-info*" -x ".claude-plugin/marketplace.json"
+(cd skills && zip -qr ../dist/explain-poker-spot.zip explain-poker-spot -x "*.DS_Store" -x "*/__pycache__/*" -x "*.egg-info*")
 
 ls -l dist

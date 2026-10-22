@@ -4,7 +4,7 @@ _Source: GTO Wizard AI solution, MTT General ICM 9-max, 200 players, 50% left. C
 
 ## Judge the decision, not the result
 
-This explanation judges the decision with only the information available when it was made. Which card came next, or who won the pot, doesn't change whether the play was right; if swapping the river card would flip the verdict, we'd be grading the result instead of the decision.
+This explanation judges the decision with only the information available when it was made. Who won the pot, or the board that came, doesn't change whether the play was right; if a different runout would flip the verdict, we'd be grading the result instead of the decision.
 
 ## Set the scene
 
@@ -20,13 +20,15 @@ This explanation judges the decision with only the information available when it
 
 LJ covers SB: if they get it all in, SB is the one who can bust. In a tournament that asymmetry matters for ICM (see below).
 
-**Stack depth:** 24.5bb effective is middle depth: min-raise opens, some limps from the SB, and 3-bet/jam vs 3-bet/fold decisions.
+**Stack depth:** 24.5bb effective. Typical of this depth in general (not read from this solution): middle depth: min-raise opens, some limps from the SB, and 3-bet/jam vs 3-bet/fold decisions.
 
-## Shape of both ranges
+## Shape of both ranges *(partial)*
 
 SB continues with 21.6% of hands (about 286 combos) and folds the rest.
 
 Range widths: LJ 22.2% of hands (294 combos).
+
+_Partial: No equity chart or breakdown captured, so range strength and categories aren't shown. Capture the Equity chart (equity, EQR, combos) and Breakdown tab for both players._
 
 ## What the whole range does
 
@@ -103,45 +105,59 @@ LJ folds only 69.4%, far below 84.1%. So the bet can't be profiting as a pure bl
 
 LJ is getting 44.1% pot odds: a call needs at least that much equity in chip EV.
 
-| Hand | Strategy | EV (bb) | Equity | Note |
-|---|---|---|---|---|
-| 44 | Fold 100.0%, Call 0.0% | 0.00 | – |  |
-| 55 | Fold 100.0%, Call 0.0% | 0.00 | – |  |
-| 66 | Fold 99.1%, Call 0.9% | 0.00 | – |  |
-| 77 | Fold 66.2%, Call 33.8% | 0.00 | – |  |
-| 88 | Call 100.0%, Fold 0.0% | 0.20 | – |  |
-| 99 | Call 100.0%, Fold 0.0% | 0.74 | – |  |
-| AA | Call 100.0%, Fold 0.0% | 4.31 | – |  |
-| AKs | Call 100.0%, Fold 0.0% | 1.86 | – |  |
-| AQs | Call 100.0%, Fold 0.0% | 0.94 | – |  |
-| AJs | Call 100.0%, Fold 0.0% | 0.29 | – |  |
-| ATs | Call 72.9%, Fold 27.1% | 0.01 | – |  |
-| A9s | Fold 100.0%, Call 0.0% | 0.00 | – |  |
-| A5s | Fold 100.0%, Call 0.0% | 0.00 | – |  |
-| A4s | Fold 100.0%, Call 0.0% | 0.00 | – |  |
-| AKo | Call 100.0%, Fold 0.0% | 1.66 | – |  |
-| AQo | Call 100.0%, Fold 0.0% | 0.68 | – |  |
-| AJo | Fold 67.2%, Call 32.8% | 0.00 | – |  |
-| ATo | Fold 100.0%, Call 0.0% | 0.00 | – |  |
-| KK | Call 100.0%, Fold 0.0% | 3.22 | – |  |
-| KQs | Call 74.2%, Fold 25.8% | 0.00 | – |  |
-| KJs | Fold 99.3%, Call 0.7% | 0.00 | – |  |
-| KQo | Fold 100.0%, Call 0.0% | 0.00 | – |  |
-| QQ | Call 100.0%, Fold 0.0% | 2.74 | – |  |
-| JJ | Call 100.0%, Fold 0.0% | 2.27 | – |  |
+| Hand | Strategy | EV (bb) |
+|---|---|---|
+| 44 | Fold 100.0%, Call 0.0% | 0.00 |
+| 55 | Fold 100.0%, Call 0.0% | 0.00 |
+| 66 | Fold 99.1%, Call 0.9% | 0.00 |
+| 77 | Fold 66.2%, Call 33.8% | 0.00 |
+| 88 | Call 100.0%, Fold 0.0% | 0.20 |
+| 99 | Call 100.0%, Fold 0.0% | 0.74 |
+| AA | Call 100.0%, Fold 0.0% | 4.31 |
+| AKs | Call 100.0%, Fold 0.0% | 1.86 |
+| AQs | Call 100.0%, Fold 0.0% | 0.94 |
+| AJs | Call 100.0%, Fold 0.0% | 0.29 |
+| ATs | Call 72.9%, Fold 27.1% | 0.01 |
+| A9s | Fold 100.0%, Call 0.0% | 0.00 |
+| A5s | Fold 100.0%, Call 0.0% | 0.00 |
+| A4s | Fold 100.0%, Call 0.0% | 0.00 |
+| AKo | Call 100.0%, Fold 0.0% | 1.66 |
+| AQo | Call 100.0%, Fold 0.0% | 0.68 |
+| AJo | Fold 67.2%, Call 32.8% | 0.00 |
+| ATo | Fold 100.0%, Call 0.0% | 0.00 |
+| KK | Call 100.0%, Fold 0.0% | 3.22 |
+| KQs | Call 74.2%, Fold 25.8% | 0.00 |
+| KJs | Fold 99.3%, Call 0.7% | 0.00 |
+| KQo | Fold 100.0%, Call 0.0% | 0.00 |
+| QQ | Call 100.0%, Fold 0.0% | 2.74 |
+| JJ | Call 100.0%, Fold 0.0% | 2.27 |
 
-## What happens on the other line
+_No equities captured for these rows; add `equity` (EQ % column) to explain which calls are thin._
+
+## What happens on the other line *(partial)*
 
 **If SB 3-bets small to 6bb instead (BB folds):**
 - LJ facing Raise 6: Fold 43.7%, Call 33.1%, Allin 25 23.0%, Raise 12 0.2%
 Against the small 3-bet LJ folds only 43.7% (vs 69.4% against the jam) and 4-bet jams 23.0%, including A4s 78.4% and A5s 39.4%. A hand like A4s that 3-bets small would face that jam and have to fold its equity away; jamming first takes LJ's 4-bet option off the table.
-LJ folds 69.4% to the main line but 43.7% here, so the main line wins the pot uncontested far more often.
+LJ folds 69.4% to the main line but 43.7% here, so the main line gets LJ to fold far more often. Both numbers are conditional on the action reaching that node (e.g. other players folding first).
+
+_Partial: No line captured after Call. Any reason given for not choosing it is inference; capture the node after it to explain it from the data._
 
 ## Blockers and card removal
 
-Holding A4s removes 15.2% of LJ's calling combos but only 8.9% of its folding combos. That moves LJ's fold frequency from 69.4% (no card removal) to 70.9% against this hand.
+Holding A4s removes 15.2% of LJ's calling combos but 8.9% of its folding combos. That moves LJ's fold frequency from 69.4% (no card removal) to 70.9% against this hand.
 
-_Fold frequencies here count only the opponent hands listed in the response rows; unlisted classes are treated as folds._
+_Check: rebuilt from the captured rows, LJ folds 69.4%, matching GTO Wizard's 69.4%, so the rows are complete._
+
+Compared with nearby hands:
+
+| Hand | LJ calls removed | Folds removed | LJ folds | Aggressive actions |
+|---|---|---|---|---|
+| A4s | 15.2% | 8.9% | 70.9% | Allin 25 53.4%, Raise 6 3.0% |
+| A5s | 15.2% | 9.7% | 70.8% | Allin 25 7.9%, Raise 6 0.0% |
+| A3s | 15.2% | 8.0% | 71.1% | Allin 25 60.2%, Raise 6 18.5% |
+
+The fold frequencies are nearly identical, so card removal alone doesn't explain why these hands differ. The rest of the difference likely comes from how each hand does when called or when it calls instead (equity, playability); capture those nodes to show it.
 
 Overall A4s removes 31.9 of 294.0 combos (10.8%) from LJ's range. Largest classes affected:
 
@@ -158,19 +174,19 @@ Overall A4s removes 31.9 of 294.0 combos (10.8%) from LJ's range. Largest classe
 | AJs | 4.00 | 3.00 | 25.0% |
 | ATs | 4.00 | 3.00 | 25.0% |
 
-## ICM versus chip EV *(includes inference)*
+## ICM versus chip EV *(includes inference, partial)*
 
 The solution uses ICM. LJ covers SB, so in an all-in only SB risks busting. Under ICM that makes SB's losses heavier than its wins: SB needs more equity to call off, and LJ can apply pressure with hands that would be too weak in chip EV.
 
-_Add the payout ladder under `format.payouts` to turn this into numbers (bubble factor, risk premium)._
+_Partial: Qualitative only. Add the payout ladder (`format.payouts`) for bubble factors and the risk premium, or capture the same node solved in ChipEV (`icm_compare`)._
 
 ## One-sentence takeaway
 
-**LJ folds 69.4% to Allin 25 but only 43.7% to Raise 6, and re-raises 23.2% against it: choosing between the two is mostly about how often you win the pot without a fight.**
+**LJ folds 69.4% to Allin 25 but only 43.7% to Raise 6, and re-raises 23.2% against it (Allin 25 23.0% + Raise 12 0.2%): choosing between the two is mostly about how often you win the pot without a fight.**
 
 Also worth remembering:
 - LJ folds 69.4%, well short of the 84.1% a zero-equity bluff needs, so every hand that bets has to earn when called too.
-- A4s blocks LJ's continuing hands (15.2% removed) more than its folds (8.9%), which is what makes it a good candidate for aggression.
+- A4s blocks LJ's continuing hands (15.2% removed) more than its folds (8.9%), which helps make it a candidate for aggression.
 
 Notes:
 - Hand rows list every class SB plays; all other classes fold 100%.
@@ -180,4 +196,10 @@ Notes:
 
 ## Coverage
 
-11 of 11 framework points covered.
+Of the 13 framework points: 8 covered, 3 partial, 0 missing, 2 not applicable.
+
+To complete the explanation, capture from GTO Wizard:
+
+- **Shape of both ranges** (partial): No equity chart or breakdown captured, so range strength and categories aren't shown. Capture the Equity chart (equity, EQR, combos) and Breakdown tab for both players.
+- **What happens on the other line** (partial): No line captured after Call. Any reason given for not choosing it is inference; capture the node after it to explain it from the data.
+- **ICM versus chip EV** (partial): Qualitative only. Add the payout ladder (`format.payouts`) for bubble factors and the risk premium, or capture the same node solved in ChipEV (`icm_compare`).

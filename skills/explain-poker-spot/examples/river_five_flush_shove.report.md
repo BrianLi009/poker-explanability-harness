@@ -4,7 +4,7 @@ _Source: GTO Wizard AI solution, MTT General ICM 9-max, 200 players, 50% left. N
 
 ## Judge the decision, not the result
 
-This explanation judges the decision with only the information available when it was made. Which card came next, or who won the pot, doesn't change whether the play was right; if swapping the river card would flip the verdict, we'd be grading the result instead of the decision.
+This explanation judges the decision with only the information available when it was made. Who won the pot, or the cards that came later, doesn't change whether the play was right; if a different runout would flip the verdict, we'd be grading the result instead of the decision.
 
 ## Set the scene
 
@@ -174,11 +174,11 @@ A♠T♠ removes these LJ combos:
 
 A♠T♠ holds A♠, T♠, one of the only cards that beat the board, so LJ can't hold it.
 
-## ICM versus chip EV *(includes inference)*
+## ICM versus chip EV *(includes inference, partial)*
 
 The solution uses ICM. LJ covers SB, so in an all-in only SB risks busting. Under ICM that makes SB's losses heavier than its wins: SB needs more equity to call off, and LJ can apply pressure with hands that would be too weak in chip EV.
 
-_Add the payout ladder under `format.payouts` to turn this into numbers (bubble factor, risk premium)._
+_Partial: Qualitative only. Add the payout ladder (`format.payouts`) for bubble factors and the risk premium, or capture the same node solved in ChipEV (`icm_compare`)._
 
 ## One-sentence takeaway
 
@@ -195,4 +195,8 @@ Notes:
 
 ## Coverage
 
-13 of 13 framework points covered.
+Of the 13 framework points: 12 covered, 1 partial, 0 missing, 0 not applicable.
+
+To complete the explanation, capture from GTO Wizard:
+
+- **ICM versus chip EV** (partial): Qualitative only. Add the payout ladder (`format.payouts`) for bubble factors and the risk premium, or capture the same node solved in ChipEV (`icm_compare`).

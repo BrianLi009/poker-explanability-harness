@@ -104,3 +104,41 @@ def test_missing_data_reports_what_to_capture():
     md = rep.to_markdown()
     assert "To complete the explanation" in md
     assert "The opponent's response" in md
+
+
+def test_coverage_statuses_preflop():
+    cov = {r["key"]: r for r in explain(PREFLOP).coverage()}
+    assert len(cov) == 13
+    assert cov["board"]["status"] == "n/a" and cov["rewind"]["status"] == "n/a"
+    assert cov["ranges"]["status"] == "partial"  # only range widths captured
+    assert cov["icm"]["status"] == "partial"  # no payouts
+    assert cov["alternatives"]["status"] == "partial"
+    assert "Call" in cov["alternatives"]["note"]  # the call line isn't captured
+
+
+def test_alternatives_full_when_every_action_captured():
+    data = json.loads(PREFLOP.read_text())
+    data["alternatives"].append({"action": "Call", "line": "SB flats", "steps": [{"player": "BB", "actions": {"Fold": 80, "Raise 9": 20}}]})
+    cov = {r["key"]: r for r in explain(data).coverage()}
+    assert cov["alternatives"]["status"] == "covered"
+
+
+def test_preflop_fold_check_and_neighbour_comparison():
+    rep = explain(PREFLOP)
+    blk = rep.get("blockers")
+    assert "matching GTO Wizard's 69.4%" in blk.body
+    assert set(blk.facts["compare"]) == {"A4s", "A5s", "A3s"}
+    # Missing a calling class breaks the rebuild and raises a data warning.
+    data = json.loads(PREFLOP.read_text())
+    data["response"]["hands"] = [h for h in data["response"]["hands"] if h["hand"] != "AA"]
+    assert any("probably missing" in w for w in explain(data).warnings)
+
+
+def test_check_flags_invented_numbers_and_thin_drafts():
+    rep = explain(PREFLOP)
+    src = load_spot(PREFLOP).data
+    thin = "LJ will call or fold 69.4%; instead of that, block, ICM, takeaway. 53.4 0.00 4.3 84.1 43.7"
+    assert check_explanation(thin, rep, source=src)["score"] <= 0.5
+    good = rep.to_markdown()
+    assert check_explanation(good, rep, source=src)["unsupported_numbers"] == []
+    assert "72.0%" in check_explanation(good.replace("69.4%", "72.0%"), rep, source=src)["unsupported_numbers"]

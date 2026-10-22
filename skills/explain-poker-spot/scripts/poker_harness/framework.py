@@ -42,12 +42,21 @@ class Section:
     facts: dict[str, Any] = field(default_factory=dict)
     covered: bool = True
     inference: bool = False  # True when the section reasons beyond the solver output
+    partial: str | None = None  # set when covered from thin data: says what's missing
 
     def markdown(self) -> str:
         head = f"## {self.title}"
+        tags = []
         if self.inference:
-            head += " *(includes inference)*"
-        return f"{head}\n\n{self.body.strip()}\n"
+            tags.append("includes inference")
+        if self.partial:
+            tags.append("partial")
+        if tags:
+            head += f" *({', '.join(tags)})*"
+        body = self.body.strip()
+        if self.partial:
+            body += f"\n\n_Partial: {self.partial}_"
+        return f"{head}\n\n{body}\n"
 
 
 @dataclass
@@ -74,21 +83,22 @@ class Report:
 
     # -- rendering ------------------------------------------------------
     def coverage(self) -> list[dict]:
+        """One row per framework point: status is covered, partial, missing or n/a."""
         rows = []
         for key, title, capture in CHECKLIST:
             s = self.get(key)
+            covered = bool(s and s.covered)
             if self.module == "preflop" and key == "board":
-                continue
-            if self.module == "preflop" and key == "rewind" and not (s and s.covered):
-                continue  # earlier folds rarely filter a preflop range
-            rows.append(
-                {
-                    "key": key,
-                    "title": title,
-                    "covered": bool(s and s.covered),
-                    "to_capture": None if (s and s.covered) else capture,
-                }
-            )
+                status, note = "n/a", "No board preflop."
+            elif self.module == "preflop" and key == "rewind" and not covered:
+                status, note = "n/a", "Earlier folds rarely filter a preflop range; capture only for later preflop nodes."
+            elif covered and s.partial:
+                status, note = "partial", s.partial
+            elif covered:
+                status, note = "covered", None
+            else:
+                status, note = "missing", capture
+            rows.append({"key": key, "title": title, "status": status, "covered": status in ("covered", "partial"), "to_capture": note if status in ("partial", "missing") else None, "note": note})
         return rows
 
     def to_markdown(self) -> str:
@@ -98,14 +108,18 @@ class Report:
         for s in self.ordered():
             if s.covered:
                 out.append(s.markdown())
-        missing = [r for r in self.coverage() if not r["covered"]]
-        out.append("## Coverage\n")
         cov = self.coverage()
-        out.append(f"{sum(r['covered'] for r in cov)} of {len(cov)} framework points covered.\n")
-        if missing:
+        counts = {k: sum(r["status"] == k for r in cov) for k in ("covered", "partial", "missing", "n/a")}
+        out.append("## Coverage\n")
+        out.append(
+            f"Of the {len(cov)} framework points: {counts['covered']} covered, {counts['partial']} partial, "
+            f"{counts['missing']} missing, {counts['n/a']} not applicable.\n"
+        )
+        todo = [r for r in cov if r["status"] in ("partial", "missing")]
+        if todo:
             out.append("To complete the explanation, capture from GTO Wizard:\n")
-            for r in missing:
-                out.append(f"- **{r['title']}**: {r['to_capture']}")
+            for r in todo:
+                out.append(f"- **{r['title']}** ({r['status']}): {r['to_capture']}")
             out.append("")
         if self.warnings:
             out.append("## Data warnings\n")

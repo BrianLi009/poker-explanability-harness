@@ -8,7 +8,7 @@ description: >
   output for preflop and postflop spots with ICM, blockers, ranges and the opponent's response. It explains
   existing solutions; it does not solve the game.
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
   author: BrianLi009
 ---
 
@@ -34,8 +34,8 @@ Capture in this priority order and stop once the explanation is solid. Each item
 1. **The node**: who acts, action frequencies and combos (Overview), pot, stacks behind, board, start-of-hand stacks (the URL `stacks=` and `preflop_actions=` parameters help).
 2. **The hero hand**: strategy and EV per action (Hands tab hover, or the Summary row).
 3. **The opponent's response** to the main action: its frequencies, pot odds and key hand rows. Never skip this. Explaining a bet without the response is the most common way to get the logic wrong.
-4. **The other line**: the node after the hero's alternative (e.g. after a check, what the opponent does and how the hero then responds).
-5. **Range shape**: Equity chart (equity, EQR, combos per player) and Breakdown categories for both players.
+4. **The other lines**: the node after each other action the hero's range uses, especially any the user asks about ("why not just call?"). Tag each with its GTO Wizard action name in `action`; the report flags actions that still have no line, and reasons given for those are only inference.
+5. **Range shape**: Equity chart (equity, EQR, combos per player) and Breakdown categories for both players. Include the EQ % column in hand rows when available; it shows which calls are thin.
 6. **Outlier rows**: the Summary tab for the node (all combos) or the grid.
 7. **Rewind**: when weights are fractional, the frequency each key combo took the line on earlier streets.
 8. **ICM inputs**: payout ladder if the user knows it; otherwise note that ICM is qualitative.
@@ -57,31 +57,37 @@ python3 <skill-dir>/scripts/harness.py explain spot.json --format json   # facts
 python3 <skill-dir>/scripts/harness.py explain spot.json                 # readable report
 ```
 
-Fix anything `validate` flags. Cross-check one number the harness derives against GTO Wizard when possible (e.g. the opponent's fold frequency rebuilt from class rows, or the chip-EV break-even matching GTO Wizard's displayed pot odds). A mismatch usually means a missing row or node.
+Fix anything `validate` flags. Read the report's **Coverage** section: points are covered, partial (thin data, with what's missing), missing, or not applicable. Capture what's missing if it matters to the user's question, or say in the answer that it wasn't captured.
+
+Check one derived number against GTO Wizard. Preflop, the report rebuilds the opponent's fold frequency from the response rows and says whether it matches the node (a mismatch means calling classes are missing). Otherwise compare the chip-EV break-even with GTO Wizard's displayed pot odds.
 
 ### 4. Write the explanation
 
-Use the report's facts, not its template wording. Follow these rules (they are also in `scripts/poker_harness/prompts/explain_hand.md`):
+Use the report's facts, not its template wording; the template sentences are generic and some are flagged as inference. (`explain --format brief` packs the same facts with these rules as a single prompt, for handing the writing to another model.) Rules:
 
 1. Explain the whole range before the specific hand.
 2. Never explain a bet without the opponent's response, and never explain a check without what happens after it. The reason for an action usually shows up only in the next node.
 3. Separate solver output from inference. Sections the report flags *(includes inference)* reason beyond the data; phrase those as "likely because…".
 4. For mixed strategies, use the EV gap: near-equal EVs mean the mix is about balance, not about the hand.
 5. For tournaments, say who covers whom, and give the bubble factor and risk premium when payouts are known.
-6. Every number must come from the captured data or the harness. Round like GTO Wizard (one decimal for %, two for bb EV).
-7. End with one plain-English sentence the user can reuse at the table.
+6. Frequencies at later nodes are conditional on reaching them (e.g. "LJ folds 69.4%" happens only after BB folds). Say so instead of calling them uncontested win rates.
+7. Before stating a blocker effect, check it against the cards: a hand blocks only combos that contain one of its cards (KQs blocks AK; A4s doesn't block 55). The report's blocker tables are the source.
+8. Every number must come from the captured data or the harness. Round like GTO Wizard (one decimal for %, two for bb EV).
+9. End with one plain-English sentence the user can reuse at the table.
 
 Format for the user: conversational, short paragraphs, a table only where comparing numbers. Lead with the answer to what they asked, then the supporting points. Don't paste the full harness report unless they ask for it; mention which points were covered from inference or missing data, in one line.
 
 ### 5. Self-check before sending
 
-Save the draft and score it:
+Save the draft and lint it:
 
 ```bash
 python3 <skill-dir>/scripts/harness.py check spot.json draft.md
 ```
 
-It lists framework points the draft skipped and key numbers it never states (e.g. the response frequencies). Fix those, or say explicitly why a point doesn't apply. If the user later corrects the logic, update the spot file and rerun rather than patching prose.
+It lists framework points the draft skipped, sections where most key numbers are absent, and `unsupported_numbers`: percentages or bb figures that appear nowhere in the report or spot data, which are usually typos or invented. Fix those, or say explicitly why a point doesn't apply.
+
+The lint can't judge whether a claim is right: a fluent draft with a wrong blocker claim still passes. Reread each causal claim against the section it came from, especially blockers and the other line. If the user later corrects the logic, update the spot file and rerun rather than patching prose.
 
 ## Quick tools
 
@@ -97,6 +103,7 @@ python3 <skill-dir>/scripts/harness.py icm --stacks 40 30 20 10 --payouts 50 30 
 - On a five-flush river where most of both ranges play the board, the shove isn't about folding out chops: the opponent calls most of its range. The real reason is on the check line, where the opponent shoves and the hero folds away its share of the pot.
 - Fractional combo weights on later streets are products of earlier-street frequencies; rewind before calling a range "weak" or "strong".
 - Preflop, which hands jam versus 3-bet small is usually explained by the opponent's response to each size (fold frequency and how often it 4-bets) plus card removal split by calls versus folds.
+- Neighbouring hands (A4s vs A5s) often have near-identical card removal; the report's comparison table shows when that's the case, so the difference must come from the lines after a call or a 3-bet. Say so rather than inventing a blocker story.
 
 ## Resources
 

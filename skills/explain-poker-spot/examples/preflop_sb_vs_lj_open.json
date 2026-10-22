@@ -963,6 +963,7 @@
  },
  "alternatives": [
   {
+   "action": "Raise 6",
    "line": "SB 3-bets small to 6bb instead (BB folds)",
    "steps": [
     {

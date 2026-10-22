@@ -27,7 +27,8 @@ Frequencies can be written as percentages (`54.5`) or fractions (`0.545`). Stack
 | `ranges` | `{seat: range}` | Ranges for card counting and blockers (see Ranges). |
 | `ranges_partial` | list of seats | Ranges that only list some combos (e.g. just the strong ones). |
 | `response` | node object | The opponent's node right after the hero's action. |
-| `alternatives` | list of `{line, steps: [node], note?}` | What happens after the hero's other action. |
+| `alternatives` | list of `{action?, line, steps: [node], note?}` | What happens after each of the hero's other actions. Set `action` to the action's GTO Wizard name (e.g. `"Raise 6"`) so the report can tell which actions still have no line. |
+| `compare_hands` | list of hands | Preflop: hands to compare with the hero hand for card removal (defaults to the same-family neighbours, e.g. A5s and A3s for A4s). |
 | `rewind` | object | Earlier-street frequencies, see below. |
 | `icm_compare` | `{player?, chipev: actions, icm: actions, note?}` | Same node solved in ChipEV and ICM. |
 | `blockers_tab` | object | Numbers from GTO Wizard's Blockers tab, e.g. `{"value_removal": 7, "trash_removal": 0}`. |

@@ -1,6 +1,6 @@
 {
   "name": "poker-explainer",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Explains tournament poker spots from GTO Wizard the way a good coach would: preflop and postflop breakdowns, ICM pressure, blockers, and the one lesson to take away. Explains the solver's strategy; doesn't solve.",
   "author": {
     "name": "BrianLi009"

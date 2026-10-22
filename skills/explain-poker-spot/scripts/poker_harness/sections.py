@@ -85,10 +85,11 @@ def _uncovered(key: str) -> Section:
 # ---------------------------------------------------------------------------
 
 def decision_section(ctx: Context) -> Section:
+    later = "the board that came" if not ctx.spot.board else "the cards that came later"
     body = (
         "This explanation judges the decision with only the information available when it was made. "
-        "Which card came next, or who won the pot, doesn't change whether the play was right; "
-        "if swapping the river card would flip the verdict, we'd be grading the result instead of the decision."
+        f"Who won the pot, or {later}, doesn't change whether the play was right; "
+        "if a different runout would flip the verdict, we'd be grading the result instead of the decision."
     )
     return Section("decision", TITLES["decision"], body)
 
@@ -280,7 +281,10 @@ def ranges_section(ctx: Context, preflop: bool = False) -> Section:
         parts.append("Range widths: " + ", ".join(f"{n} {pct(w)} of hands ({r.total():.0f} combos)" for (n, w), r in zip(widths.items(), s.ranges.values())) + ".")
     if not parts:
         return _uncovered("ranges")
-    return Section("ranges", TITLES["ranges"], "\n\n".join(parts), facts)
+    sec = Section("ranges", TITLES["ranges"], "\n\n".join(parts), facts)
+    if not s.equity and not s.breakdown:
+        sec.partial = "No equity chart or breakdown captured, so range strength and categories aren't shown. Capture the Equity chart (equity, EQR, combos) and Breakdown tab for both players."
+    return sec
 
 
 # ---------------------------------------------------------------------------
@@ -536,8 +540,20 @@ def response_section(ctx: Context) -> Section:
                 return ", ".join(f"{a} {v:.2f}" for a, v in h.ev.items())
             return f"{h.ev_best:.2f}" if h.ev_best is not None else "–"
 
-        rows = [[pretty_hand(h.hand), actions_line(h.strategy), ev_cell(h), pct(h.equity) if h.equity is not None else "–", h.label or ""] for h in r.hands[:24]]
-        lines.append(table(["Hand", "Strategy", "EV (bb)", "Equity", "Note"], rows))
+        has_eq = any(h.equity is not None for h in r.hands)
+        has_note = any(h.label for h in r.hands)
+        headers = ["Hand", "Strategy", "EV (bb)"] + (["Equity"] if has_eq else []) + (["Note"] if has_note else [])
+        rows = []
+        for h in r.hands[:24]:
+            row = [pretty_hand(h.hand), actions_line(h.strategy), ev_cell(h)]
+            if has_eq:
+                row.append(pct(h.equity) if h.equity is not None else "–")
+            if has_note:
+                row.append(h.label or "")
+            rows.append(row)
+        lines.append(table(headers, rows))
+        if not has_eq:
+            lines.append("_No equities captured for these rows; add `equity` (EQ % column) to explain which calls are thin._")
         if indiff:
             lines.append(
                 "Near-indifferent hands (EV gap under 0.5bb): " + ", ".join(pretty_hand(h.hand) for h in indiff[:8])
@@ -606,20 +622,83 @@ def alternatives_section(ctx: Context) -> Section:
             if f_main is not None and f_alt is not None and abs(f_main - f_alt) >= 15:
                 better = "the main line" if f_main > f_alt else "this line"
                 desc.append(
-                    f"{resp.player} folds {pct(f_main)} to the main line but {pct(f_alt)} here, so {better} wins the pot uncontested far more often."
+                    f"{resp.player} folds {pct(f_main)} to the main line but {pct(f_alt)} here, so {better} gets {resp.player} to fold far more often. "
+                    "Both numbers are conditional on the action reaching that node (e.g. other players folding first)."
                 )
-                aggr_alt = sum(v for a, v in steps[0].actions.items() if is_allin(a) or "raise" in a.lower())
+                aggr_parts = {a: v for a, v in steps[0].actions.items() if (is_allin(a) or "raise" in a.lower()) and v > 0}
+                aggr_alt = sum(aggr_parts.values())
                 main_name = re.sub(r"\s*\(.*\)", "", resp.facing or "main action")
                 alt_name = re.sub(r"\s*\(.*\)", "", steps[0].facing or alt.get("line", "other line"))
                 ctx.lesson(
                     8,
                     f"{resp.player} folds {pct(f_main)} to {main_name} but only {pct(f_alt)} to {alt_name}"
-                    + (f", and re-raises {pct(aggr_alt)} against it" if aggr_alt >= 10 else "")
+                    + (
+                        f", and re-raises {pct(aggr_alt)} against it ({' + '.join(f'{a} {pct(v)}' for a, v in aggr_parts.items())})"
+                        if aggr_alt >= 10
+                        else ""
+                    )
                     + ": choosing between the two is mostly about how often you win the pot without a fight.",
                 )
-        facts.append({"line": alt.get("line"), "steps": [st.__dict__ for st in steps]})
+        facts.append({"line": alt.get("line"), "action": alt.get("action"), "steps": [st.__dict__ for st in steps]})
         lines.append("\n".join(desc))
-    return Section("alternatives", TITLES["alternatives"], "\n\n".join(lines), {"alternatives": facts}, inference=inference)
+    sec = Section("alternatives", TITLES["alternatives"], "\n\n".join(lines), {"alternatives": facts}, inference=inference)
+    # Which of the hero's other actions have no captured line?
+    uncaptured = _uncaptured_actions(s)
+    if uncaptured:
+        sec.facts["uncaptured_actions"] = uncaptured
+        sec.partial = (
+            "No line captured after " + ", ".join(uncaptured)
+            + ". Any reason given for not choosing it is inference; capture the node after it to explain it from the data."
+        )
+    return sec
+
+
+_ACTION_WORDS = {
+    "check": ("check",),
+    "call": ("call", "flat", "limp"),
+    "fold": ("fold",),
+    "raise": ("raise", "3-bet", "3bet", "4-bet", "4bet", "squeeze", "min-raise"),
+    "bet": ("bet", "lead", "c-bet", "cbet"),
+    "allin": ("allin", "all-in", "all in", "jam", "shove"),
+}
+
+
+def _action_kind(action: str) -> str:
+    a = action.lower()
+    if is_allin(a):
+        return "allin"
+    for kind in ("check", "call", "fold", "raise", "bet"):
+        if a.startswith(kind):
+            return kind
+    return a.split()[0] if a.split() else a
+
+
+def _uncaptured_actions(s: Spot) -> list[str]:
+    """Actions the hero's range uses (>=1%, not fold, not the main one) with no alternative line."""
+    node = s.node
+    if not node or not node.actions:
+        return []
+    main = s.response.facing if s.response and s.response.facing else None
+    used = [a for a, v in node.actions.items() if v >= 1.0 and not a.lower().startswith("fold")]
+    if main:
+        main_kind = _action_kind(main)
+        used = [a for a in used if not (a == main or (_action_kind(a) == main_kind and main.split()[0] in a))]
+    captured_text = []
+    for alt in s.alternatives:
+        if alt.get("action"):
+            captured_text.append(str(alt["action"]).lower())
+        captured_text.append(str(alt.get("line", "")).lower())
+    out = []
+    for a in used:
+        al = a.lower()
+        if any(al == t or al.split(" (")[0] == t for t in captured_text):
+            continue
+        kind = _action_kind(a)
+        words = _ACTION_WORDS.get(kind, (kind,))
+        if any(any(w in t for w in words) for t in captured_text):
+            continue
+        out.append(a)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -823,10 +902,13 @@ def icm_section(ctx: Context) -> Section:
                 f"and {covering} can apply pressure with hands that would be too weak in chip EV."
             )
             inference = True
-            lines.append("_Add the payout ladder under `format.payouts` to turn this into numbers (bubble factor, risk premium)._")
+            facts["qualitative_only"] = True
     if not lines:
         return _uncovered("icm")
-    return Section("icm", TITLES["icm"], "\n\n".join(lines), facts, inference=inference)
+    sec = Section("icm", TITLES["icm"], "\n\n".join(lines), facts, inference=inference)
+    if facts.get("qualitative_only"):
+        sec.partial = "Qualitative only. Add the payout ladder (`format.payouts`) for bubble factors and the risk premium, or capture the same node solved in ChipEV (`icm_compare`)."
+    return sec
 
 
 # ---------------------------------------------------------------------------
