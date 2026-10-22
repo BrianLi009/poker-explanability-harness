@@ -85,7 +85,7 @@ The top two actions are within 0.09bb (0.9% of the pot), so the hand is close to
 
 This hand plays Allin 21 96.9% of the time against 54.5% for the range as a whole, so it is an outlier: the explanation has to say what this hand gains from that action that most of the range doesn't.
 
-## Outlier hands and why
+## Borderline and outlier hands
 
 The range plays **Allin 21** 54.5% of the time overall. Hands that deviate from that by 30 points or more:
 - **Allin 21 more often:** 22 100.0% (Plays the board), 33 100.0% (Plays the board), 44 100.0% (Plays the board), 55 100.0% (Plays the board), 66 100.0% (Plays the board), 54s 100.0% (Plays the board), 65s 100.0% (Plays the board), A♠T♠ 96.9% (Royal flush)

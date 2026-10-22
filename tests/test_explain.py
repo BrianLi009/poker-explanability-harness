@@ -51,8 +51,9 @@ def test_preflop_report_matches_gto_wizard_fold_frequency():
 def test_preflop_outliers_and_family_patterns():
     rep = explain(PREFLOP)
     out = rep.get("outliers")
-    assert "Allin 25" in out.facts["by_action"]
-    assert "AQo" in out.facts["by_action"]["Allin 25"]["hands"]
+    jam = {b["family"]: b for b in out.facts["borders"] if b["action"] == "Allin 25"}
+    assert jam["Offsuit aces (Axo)"]["range"] == "AQo+"
+    assert jam["Pocket pairs"]["worst"] == "88" and jam["Pocket pairs"]["below"] == "77"
     md = rep.to_markdown()
     assert "Hand-family patterns" in md and "KJs" in md
 
@@ -141,4 +142,34 @@ def test_check_flags_invented_numbers_and_thin_drafts():
     assert check_explanation(thin, rep, source=src)["score"] <= 0.5
     good = rep.to_markdown()
     assert check_explanation(good, rep, source=src)["unsupported_numbers"] == []
-    assert "72.0%" in check_explanation(good.replace("69.4%", "72.0%"), rep, source=src)["unsupported_numbers"]
+    assert "77.7%" in check_explanation(good.replace("69.4%", "77.7%"), rep, source=src)["unsupported_numbers"]
+
+
+def test_global_shape_and_borders_use_plurality_action():
+    rep = explain(PREFLOP)
+    ranges = rep.get("range_first").facts["ranges_by_action"]
+    assert ranges["Allin 25"].startswith("TT-88")
+    assert "JJ+" in ranges["Raise 6"] and "AQs+" in ranges["Raise 6"]
+    borders = {(b["action"], b["family"]): b for b in rep.get("outliers").facts["borders"]}
+    call_axs = borders[("Call", "Suited aces (Axs)")]
+    assert call_axs["best"] == "AJs" and call_axs["above"] == "AQs" and call_axs["split"]
+    assert borders[("Raise 6", "Suited aces (Axs)")]["range"] == "AQs+, A6s, A2s"
+
+
+def test_compact_range_tokens():
+    from poker_harness.shape import build_shape
+    from poker_harness.spot import HandRow
+
+    rows = [HandRow(hand=h, strategy={"Jam": 100, "Fold": 0}) for h in ["AA", "KK", "QQ", "99", "88", "AKs", "AQs", "A5s"]]
+    shape = build_shape({"Jam": 10, "Fold": 90}, rows, complete=True)
+    assert shape.ranges["Jam"] == "QQ+, 99-88, AQs+, A5s"
+    b = {x["family"]: x for x in shape.borders}["Pocket pairs"]
+    assert (b["worst"], b["below"], b["below_does"], b["gaps"]) == ("88", "77", "Fold", ["JJ", "TT"])
+
+
+def test_alternatives_not_applicable_when_only_fold_remains():
+    data = json.loads(PREFLOP.read_text())
+    data["node"]["actions"] = {"Allin 25": 20.0, "Fold": 80.0}
+    data["alternatives"] = []
+    cov = {r["key"]: r for r in explain(data).coverage()}
+    assert cov["alternatives"]["status"] == "n/a"

@@ -985,5 +985,6 @@
   "Class strategies are the combo-weighted average of GTO Wizard's Summary rows; EV is the hand's EV at its best mix (Summary 'EV' column).",
   "LJ's range is its full opening range with GTO Wizard's weights.",
   "The response node is LJ facing the shove after BB folds; BB folds 94.9% first."
- ]
+ ],
+ "hands_complete": true
 }

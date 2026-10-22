@@ -11,7 +11,7 @@ Cover these points in order. Skip a point only if it is listed under `missing`, 
 ## Rules
 
 1. Every number you state must come from the facts. Round the way GTO Wizard does (one decimal for percentages, two for bb EVs).
-2. Explain the whole range before the specific hand.
+2. Explain the whole range before the specific hand. Preflop: first the global shape (each action's frequency and hands by family), then the borderlines (best and worst hand per action and family, and what the neighbours just outside do), then the reasons.
 3. Never explain a bet without the opponent's response, and never explain a check without what happens after it. The reason for an action is usually visible only in the next node.
 4. Separate what the solver shows from what you infer. Mark inferences ("likely because...") and never present them as solver output. Sections flagged `"inference": true` contain reasoning beyond the data.
 5. For mixed strategies, use the EV gap: near-equal EVs mean the mix is about balance, not about the hand.

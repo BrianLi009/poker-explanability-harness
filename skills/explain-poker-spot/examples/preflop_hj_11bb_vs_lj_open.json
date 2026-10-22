@@ -1,0 +1,1036 @@
+{
+ "module": "preflop",
+ "title": "HJ (11bb) facing LJ's 2bb open (MTT, ICM, 25% left)",
+ "source": "GTO Wizard AI solution, MTT General ICM 9-max, 200 players, 25% of the field left. Captured on 2026-10-22 from the Summary tab of each node (all 1326 combos, averaged into hand classes).",
+ "format": {
+  "game": "MTT",
+  "structure": "9-max, 200 entrants",
+  "phase": "25% of the field left (about 50 players)",
+  "icm": true,
+  "average_stack": 35
+ },
+ "table": [
+  {
+   "seat": "UTG",
+   "stack": 35.125
+  },
+  {
+   "seat": "UTG1",
+   "stack": 29.125
+  },
+  {
+   "seat": "UTG2",
+   "stack": 47.125
+  },
+  {
+   "seat": "LJ",
+   "stack": 59.125
+  },
+  {
+   "seat": "HJ",
+   "stack": 11.125
+  },
+  {
+   "seat": "CO",
+   "stack": 53.125
+  },
+  {
+   "seat": "BTN",
+   "stack": 17.125
+  },
+  {
+   "seat": "SB",
+   "stack": 41.125
+  },
+  {
+   "seat": "BB",
+   "stack": 23.125
+  }
+ ],
+ "hero": "HJ",
+ "villain": "LJ",
+ "history": [
+  {
+   "street": "preflop",
+   "actions": "UTG, UTG1 and UTG2 fold, LJ raises to 2, HJ to act"
+  }
+ ],
+ "pot": 4.63,
+ "stacks_behind": {
+  "HJ": 11.0,
+  "LJ": 57.0
+ },
+ "bet": {
+  "size": 11.0,
+  "pot_before": 4.63
+ },
+ "node": {
+  "player": "HJ",
+  "actions": {
+   "Allin 11": 12.94,
+   "Call": 0.01,
+   "Fold": 87.05
+  },
+  "pot_odds": 30.2
+ },
+ "hero_hand": {
+  "hand": "A5s",
+  "strategy": {
+   "Allin 11": 100.0,
+   "Call": 0.0,
+   "Fold": 0.0
+  },
+  "ev_best": 0.02,
+  "ev": {
+   "Allin 11": 0.02,
+   "Call": 0.01,
+   "Fold": 0
+  }
+ },
+ "hands": [
+  {
+   "hand": "AA",
+   "strategy": {
+    "Allin 11": 99.5,
+    "Call": 0.5,
+    "Fold": 0.0
+   },
+   "ev_best": 2.48
+  },
+  {
+   "hand": "AKs",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 1.16
+  },
+  {
+   "hand": "AQs",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.8
+  },
+  {
+   "hand": "AJs",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.5
+  },
+  {
+   "hand": "ATs",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.29
+  },
+  {
+   "hand": "A9s",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.11
+  },
+  {
+   "hand": "A8s",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.05
+  },
+  {
+   "hand": "A7s",
+   "strategy": {
+    "Allin 11": 99.9,
+    "Call": 0.0,
+    "Fold": 0.1
+   },
+   "ev_best": 0.02
+  },
+  {
+   "hand": "A6s",
+   "strategy": {
+    "Allin 11": 0.0,
+    "Call": 0.2,
+    "Fold": 99.8
+   },
+   "ev_best": 0.0,
+   "ev": {
+    "Allin 11": -0.01,
+    "Call": 0,
+    "Fold": 0
+   }
+  },
+  {
+   "hand": "A5s",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.02,
+   "ev": {
+    "Allin 11": 0.02,
+    "Call": 0.01,
+    "Fold": 0
+   }
+  },
+  {
+   "hand": "A4s",
+   "strategy": {
+    "Allin 11": 40.9,
+    "Call": 0.3,
+    "Fold": 58.9
+   },
+   "ev_best": 0.0,
+   "ev": {
+    "Allin 11": 0,
+    "Call": 0,
+    "Fold": 0
+   }
+  },
+  {
+   "hand": "A3s",
+   "strategy": {
+    "Allin 11": 0.0,
+    "Call": 0.0,
+    "Fold": 100.0
+   },
+   "ev_best": 0.0
+  },
+  {
+   "hand": "A2s",
+   "strategy": {
+    "Allin 11": 0.0,
+    "Call": 0.0,
+    "Fold": 100.0
+   },
+   "ev_best": 0.0
+  },
+  {
+   "hand": "AKo",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 1.05
+  },
+  {
+   "hand": "KK",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 1.83
+  },
+  {
+   "hand": "KQs",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.22
+  },
+  {
+   "hand": "KJs",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.08
+  },
+  {
+   "hand": "KTs",
+   "strategy": {
+    "Allin 11": 0.0,
+    "Call": 0.4,
+    "Fold": 99.6
+   },
+   "ev_best": 0.0,
+   "ev": {
+    "Allin 11": -0.01,
+    "Call": 0,
+    "Fold": 0
+   }
+  },
+  {
+   "hand": "AQo",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.67
+  },
+  {
+   "hand": "KQo",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.05
+  },
+  {
+   "hand": "QQ",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 1.4
+  },
+  {
+   "hand": "QJs",
+   "strategy": {
+    "Allin 11": 99.3,
+    "Call": 0.7,
+    "Fold": 0.0
+   },
+   "ev_best": 0.01
+  },
+  {
+   "hand": "QTs",
+   "strategy": {
+    "Allin 11": 0.0,
+    "Call": 0.0,
+    "Fold": 100.0
+   },
+   "ev_best": 0.0
+  },
+  {
+   "hand": "AJo",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.34
+  },
+  {
+   "hand": "KJo",
+   "strategy": {
+    "Allin 11": 0.0,
+    "Call": 0.0,
+    "Fold": 100.0
+   },
+   "ev_best": 0.0,
+   "ev": {
+    "Allin 11": -0.1,
+    "Call": -0.03,
+    "Fold": 0
+   }
+  },
+  {
+   "hand": "JJ",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 1.04
+  },
+  {
+   "hand": "JTs",
+   "strategy": {
+    "Allin 11": 0.0,
+    "Call": 0.0,
+    "Fold": 100.0
+   },
+   "ev_best": 0.0
+  },
+  {
+   "hand": "ATo",
+   "strategy": {
+    "Allin 11": 99.9,
+    "Call": 0.1,
+    "Fold": 0.0
+   },
+   "ev_best": 0.12,
+   "ev": {
+    "Allin 11": 0.12,
+    "Call": 0.12,
+    "Fold": 0
+   }
+  },
+  {
+   "hand": "TT",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.76
+  },
+  {
+   "hand": "T9s",
+   "strategy": {
+    "Allin 11": 0.0,
+    "Call": 0.0,
+    "Fold": 100.0
+   },
+   "ev_best": 0.0
+  },
+  {
+   "hand": "A9o",
+   "strategy": {
+    "Allin 11": 0.0,
+    "Call": 0.0,
+    "Fold": 100.0
+   },
+   "ev_best": 0.0,
+   "ev": {
+    "Allin 11": -0.07,
+    "Call": 0,
+    "Fold": 0
+   }
+  },
+  {
+   "hand": "99",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.5
+  },
+  {
+   "hand": "88",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.36
+  },
+  {
+   "hand": "77",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.26
+  },
+  {
+   "hand": "66",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.17
+  },
+  {
+   "hand": "55",
+   "strategy": {
+    "Allin 11": 100.0,
+    "Call": 0.0,
+    "Fold": 0.0
+   },
+   "ev_best": 0.08
+  },
+  {
+   "hand": "44",
+   "strategy": {
+    "Allin 11": 99.8,
+    "Call": 0.2,
+    "Fold": 0.0
+   },
+   "ev_best": 0.02
+  },
+  {
+   "hand": "33",
+   "strategy": {
+    "Allin 11": 1.5,
+    "Call": 0.0,
+    "Fold": 98.5
+   },
+   "ev_best": 0.0,
+   "ev": {
+    "Allin 11": -0.01,
+    "Call": -0.04,
+    "Fold": 0
+   }
+  },
+  {
+   "hand": "22",
+   "strategy": {
+    "Allin 11": 0.0,
+    "Call": 0.0,
+    "Fold": 100.0
+   },
+   "ev_best": 0.0
+  }
+ ],
+ "ranges": {
+  "LJ": {
+   "55": 1.0,
+   "66": 1.0,
+   "77": 1.0,
+   "88": 1.0,
+   "99": 1.0,
+   "AA": 1.0,
+   "AKs": 1.0,
+   "AQs": 1.0,
+   "AJs": 1.0,
+   "ATs": 1.0,
+   "A9s": 1.0,
+   "A8s": 1.0,
+   "A7s": 1.0,
+   "A6s": 1.0,
+   "A5s": 1.0,
+   "A4s": 1.0,
+   "A3s": 1.0,
+   "A2s": 1.0,
+   "AKo": 1.0,
+   "AQo": 1.0,
+   "AJo": 1.0,
+   "ATo": 1.0,
+   "A9o": 1.0,
+   "A8o": 1.0,
+   "A7o": 0.24,
+   "A5o": 0.56,
+   "KK": 1.0,
+   "KQs": 1.0,
+   "KJs": 1.0,
+   "KTs": 1.0,
+   "K9s": 1.0,
+   "K8s": 1.0,
+   "K7s": 1.0,
+   "K6s": 1.0,
+   "K5s": 0.36,
+   "K4s": 0.27,
+   "KQo": 1.0,
+   "KJo": 1.0,
+   "KTo": 1.0,
+   "QQ": 1.0,
+   "QJs": 1.0,
+   "QTs": 1.0,
+   "Q9s": 1.0,
+   "Q8s": 0.9,
+   "QJo": 1.0,
+   "QTo": 0.91,
+   "JJ": 1.0,
+   "JTs": 1.0,
+   "J9s": 1.0,
+   "J8s": 0.01,
+   "JTo": 0.36,
+   "TT": 1.0,
+   "T9s": 1.0
+  }
+ },
+ "response": {
+  "player": "LJ",
+  "facing": "Allin 11 (after CO, BTN, SB and BB fold)",
+  "pot_odds": 36.5,
+  "actions": {
+   "Call": 53.07,
+   "Fold": 46.93
+  },
+  "hands": [
+   {
+    "hand": "55",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.19
+   },
+   {
+    "hand": "66",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.32
+   },
+   {
+    "hand": "77",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.44
+   },
+   {
+    "hand": "88",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.58
+   },
+   {
+    "hand": "99",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.73
+   },
+   {
+    "hand": "AA",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 2.46
+   },
+   {
+    "hand": "AKs",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 1.17
+   },
+   {
+    "hand": "AQs",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.9
+   },
+   {
+    "hand": "AJs",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.61
+   },
+   {
+    "hand": "ATs",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.36
+   },
+   {
+    "hand": "A9s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.16
+   },
+   {
+    "hand": "A8s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.09
+   },
+   {
+    "hand": "A7s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.03
+   },
+   {
+    "hand": "A6s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "A5s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 44.3,
+     "Fold": 55.7
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "A4s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "A3s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "A2s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "AKo",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 1.07
+   },
+   {
+    "hand": "AQo",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.79
+   },
+   {
+    "hand": "AJo",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.48
+   },
+   {
+    "hand": "ATo",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.21
+   },
+   {
+    "hand": "A9o",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "A8o",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "A7o",
+    "weight": 0.24,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "A5o",
+    "weight": 0.56,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "KK",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 1.78
+   },
+   {
+    "hand": "KQs",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.22
+   },
+   {
+    "hand": "KJs",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.07
+   },
+   {
+    "hand": "KTs",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 81.7,
+     "Fold": 18.3
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "K9s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "K8s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "K7s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "K6s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "K5s",
+    "weight": 0.36,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "K4s",
+    "weight": 0.27,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "KQo",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.06
+   },
+   {
+    "hand": "KJo",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "KTo",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "QQ",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 1.47
+   },
+   {
+    "hand": "QJs",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.02
+   },
+   {
+    "hand": "QTs",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "Q9s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "Q8s",
+    "weight": 0.9,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "QJo",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "QTo",
+    "weight": 0.91,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "JJ",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 1.17
+   },
+   {
+    "hand": "JTs",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "J9s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "J8s",
+    "weight": 0.01,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "JTo",
+    "weight": 0.36,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   },
+   {
+    "hand": "TT",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 100.0,
+     "Fold": 0.0
+    },
+    "ev_best": 0.94
+   },
+   {
+    "hand": "T9s",
+    "weight": 1.0,
+    "strategy": {
+     "Call": 0.0,
+     "Fold": 100.0
+    },
+    "ev_best": 0.0
+   }
+  ],
+  "note": "Players behind act first: CO folds 96.2% (re-jams or isolates with 99+, AQs+, AKo), BTN folds 94.9% and SB folds 94.9% (both call 99+, AQs+, AQo+), BB folds 94.1% (calls 88+, AJs+, AQo+)."
+ },
+ "notes": [
+  "HJ rows list every class HJ jams plus a few notable folds; all other classes fold 100%.",
+  "Per-action EVs (Hands tab hover) captured for A5s, A6s, A4s, KTs, 33, A9o, KJo and ATo; other rows show the Summary EV at the solver mix.",
+  "LJ's range is its full opening range at the response node with GTO Wizard's weights (311 combos).",
+  "Payout ladder not captured, so ICM is qualitative."
+ ],
+ "hands_complete": true
+}

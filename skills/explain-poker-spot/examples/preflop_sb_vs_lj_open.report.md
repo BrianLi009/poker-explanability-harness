@@ -34,6 +34,12 @@ _Partial: No equity chart or breakdown captured, so range strength and categorie
 
 Facing this spot, SB's whole range plays: Fold 78.4%, Call 10.9%, Raise 6 6.4%, Allin 25 4.3%.
 
+**The range by action** (each hand listed under the action it plays most; other actions it uses at least 15% of the time in brackets):
+- **Call** (10.9%): 77-22, AJs-A7s, A5s, A6s (46%), A4s (44%), A3s (21%), AJo, ATo (32%), KQs, K9s-K7s, KJo+, QTs-Q9s, QJs (47%), Q8s (17%), QJo (37%), J9s+, T8s+, 98s, 87s, 76s (44%), 65s, 54s
+- **Raise 6** (6.4%): JJ+, 88 (49%), AQs+, A6s, A2s, AJs (48%), A3s (18%), ATo, AKo (46%), AJo (30%), A9o (45%), K7s (26%), KQo (36%), Q8s, Q9s (19%), QJo
+- **Allin 25** (4.3%): TT-88, 55 (29%), 44 (26%), A4s-A3s, AQo+, AJo (29%), KJs-KTs, QJs, QTs (26%), JTs (19%)
+- **Fold** (78.4%): everything else.
+
 ## Where the hand sits and its EV
 
 **Hand:** A4s.
@@ -46,14 +52,50 @@ The top two actions are within 0.00bb (0.0% of the pot), so the hand is close to
 
 This hand plays Allin 25 53.4% of the time against 4.3% for the range as a whole, so it is an outlier: the explanation has to say what this hand gains from that action that most of the range doesn't.
 
-## Outlier hands and why *(includes inference)*
+## Borderline hands *(includes inference)*
 
-SB folds 78.4% and continues with 21.6% of hands. Within the continuing range, each action has its own go-to hands:
-- **Call** (50.5% of continues): 22 100.0%, ATs 100.0%, A9s 100.0%, K9s 100.0%, J9s 100.0%, T9s 100.0%, T8s 100.0%, A8s 99.9%, KQs 99.9%, 66 98.6%, KJo 97.6%, 77 95.5% and 4 more
-- **Raise 6** (29.7% of continues): AA 100.0%, AKs 100.0%, AQs 100.0%, KK 100.0%, QQ 100.0%, JJ 100.0%, A2s 85.6%, Q8s 72.1%
-- **Allin 25** (19.8% of continues): AQo 100.0%, KTs 99.9%, KJs 98.8%, TT 97.6%, 99 85.3%, A3s 60.2%
+Inside each hand family, where each action starts and stops. "Above" and "below" are the neighbouring hands just outside the action and what they do instead.
 
-Hands that mix between two or more actions (each at least 20%): 44, 55, 88, AJs, A6s, A4s, A3s, AKo, AJo, ATo, A9o, K7s, KQo, QJs. Mixed hands sit on the boundary between two actions and have near-equal EVs.
+**Call**
+
+| Family | Range | Best | Just above | Worst | Just below | Gaps |
+|---|---|---|---|---|---|---|
+| Pocket pairs | 77-22 | 77 | 88: Allin 25 50% | 22 | – (bottom of family) |  |
+| Suited aces (Axs) | AJs-A7s, A5s | AJs | AQs: Raise 6 | A5s | A4s: Allin 25 53% | A6s: Raise 6 54% |
+| Offsuit aces (Axo) | AJo | AJo | AQo: Allin 25 | AJo | ATo: Raise 6 68% |  |
+| Suited kings (Kxs) | KQs, K9s-K7s | KQs | – (top of family) | K7s | K6s: Fold 94% | KJs: Allin 25 99%, KTs: Allin 25 |
+| Offsuit kings (Kxo) | KJo+ | KQo | – (top of family) | KJo | KTo: Fold 99% |  |
+| Suited queens (Qxs) | QTs-Q9s | QTs | QJs: Allin 25 53% | Q9s | Q8s: Raise 6 72% |  |
+| Suited jacks (Jxs) | J9s+ | JTs | – (top of family) | J9s | J8s: Fold 99% |  |
+| Suited tens (Txs) | T8s+ | T9s | – (top of family) | T8s | T7s: Fold |  |
+| Suited nines (9xs) | 98s | 98s | – (top of family) | 98s | 97s: Fold 99% |  |
+| Suited eights (8xs) | 87s | 87s | – (top of family) | 87s | 86s: Fold |  |
+| Suited sixes (6xs) | 65s | 65s | – (top of family) | 65s | 64s: Fold |  |
+| Suited fives (5xs) | 54s | 54s | – (top of family) | 54s | 53s: Fold |  |
+
+**Raise 6**
+
+| Family | Range | Best | Just above | Worst | Just below | Gaps |
+|---|---|---|---|---|---|---|
+| Pocket pairs | JJ+ | AA | – (top of family) | JJ | TT: Allin 25 98% |  |
+| Suited aces (Axs) | AQs+, A6s, A2s | AKs | – (top of family) | A2s | – (bottom of family) | AJs: Call 52%, ATs: Call, A9s: Call and 5 more |
+| Offsuit aces (Axo) | ATo | ATo | AJo: Call 41% | ATo | A9o: Fold 55% |  |
+| Suited queens (Qxs) | Q8s | Q8s | Q9s: Call 81% | Q8s | Q7s: Fold |  |
+| Offsuit queens (Qxo) | QJo | QJo | – (top of family) | QJo | QTo: Fold |  |
+
+**Allin 25**
+
+| Family | Range | Best | Just above | Worst | Just below | Gaps |
+|---|---|---|---|---|---|---|
+| Pocket pairs | TT-88 | TT | JJ: Raise 6 | 88 | 77: Call 96% |  |
+| Suited aces (Axs) | A4s-A3s | A4s | A5s: Call 92% | A3s | A2s: Raise 6 86% |  |
+| Offsuit aces (Axo) | AQo+ | AKo | – (top of family) | AQo | AJo: Call 41% |  |
+| Suited kings (Kxs) | KJs-KTs | KJs | KQs: Call | KTs | K9s: Call |  |
+| Suited queens (Qxs) | QJs | QJs | – (top of family) | QJs | QTs: Call 74% |  |
+
+Split ranges (the action skips a block of hands in the middle): Call with Suited aces (Axs): AJs-A7s, A5s; Call with Suited kings (Kxs): KQs, K9s-K7s; Raise 6 with Suited aces (Axs): AQs+, A6s, A2s. A split usually means two reasons for the same action, e.g. value at the top and blockers or fold equity at the bottom (likely, not labelled by the solver).
+
+_Capture per-action EVs (Hands tab hover) for the worst hand in and the best hand out of each action to show how close the border is._
 
 ### Hand-family patterns
 

@@ -471,7 +471,7 @@ def _outliers_continuing(ctx: Context, node: Node, rows: list[HandRow]) -> Secti
         if act == fold_key or freq < 1.0:
             continue
         share = 100.0 * freq / cont if cont else 0.0
-        picks = [r for r in rows if r.strategy.get(act, 0.0) - share >= 40]
+        picks = [r for r in rows if r.strategy.get(act, 0.0) >= 50 and (r.strategy.get(act, 0.0) - share >= 40 or share >= 60)]
         picks.sort(key=lambda r: -r.strategy.get(act, 0.0))
         facts["by_action"][act] = {"share_of_continues": share, "hands": [r.hand for r in picks]}
         if picks:
@@ -582,6 +582,10 @@ def response_section(ctx: Context) -> Section:
 def alternatives_section(ctx: Context) -> Section:
     s = ctx.spot
     if not s.alternatives:
+        if s.node and s.node.actions and s.response and s.response.facing and not _uncaptured_actions(s):
+            sec = _uncovered("alternatives")
+            sec.na = "The range's only other option is folding (worth 0), so there's no other line to follow."
+            return sec
         return _uncovered("alternatives")
     lines = []
     facts = []

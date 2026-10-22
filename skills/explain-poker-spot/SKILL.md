@@ -8,7 +8,7 @@ description: >
   output for preflop and postflop spots with ICM, blockers, ranges and the opponent's response. It explains
   existing solutions; it does not solve the game.
 metadata:
-  version: "0.2.1"
+  version: "0.3.0"
   author: BrianLi009
 ---
 
@@ -36,7 +36,7 @@ Capture in this priority order and stop once the explanation is solid. Each item
 3. **The opponent's response** to the main action: its frequencies, pot odds and key hand rows. Never skip this. Explaining a bet without the response is the most common way to get the logic wrong.
 4. **The other lines**: the node after each other action the hero's range uses, especially any the user asks about ("why not just call?"). Tag each with its GTO Wizard action name in `action`; the report flags actions that still have no line, and reasons given for those are only inference.
 5. **Range shape**: Equity chart (equity, EQR, combos per player) and Breakdown categories for both players. Include the EQ % column in hand rows when available; it shows which calls are thin.
-6. **Outlier rows**: the Summary tab for the node (all combos) or the grid.
+6. **Hand rows**: the Summary tab for the node (all combos) or the grid. Preflop, capture every class (the Summary script does) and set `hands_complete: true`, so the borders against folding are exact. Then hover the hands at each border (worst hand in, best hand out of each action) in the Hands tab for their per-action EVs.
 7. **Rewind**: when weights are fractional, the frequency each key combo took the line on earlier streets.
 8. **ICM inputs**: payout ladder if the user knows it; otherwise note that ICM is qualitative.
 
@@ -65,7 +65,10 @@ Check one derived number against GTO Wizard. Preflop, the report rebuilds the op
 
 Use the report's facts, not its template wording; the template sentences are generic and some are flagged as inference. (`explain --format brief` packs the same facts with these rules as a single prompt, for handing the writing to another model.) Rules:
 
-1. Explain the whole range before the specific hand.
+1. Explain the whole range before the specific hand. **Preflop, use this order:**
+   1. **Global shape**: what the entire range does. Give each action's frequency and the hands behind it as compact ranges by family (the report's "range by action" list, e.g. "Jam 12.9%: 44+, A7s+, A5s, ATo+, KJs+, KQo, QJs; fold the rest").
+   2. **Borderlines**: for each action, the best and worst hand taking it in each family, and what the hands just above and below do instead (the report's "Borderline hands" tables, e.g. "the jam stops at 44; 33 folds"; "calls run AJs-A7s; AQs 3-bets above, A4s jams below"). Point out split ranges (A6s and A2s 3-bet while A5s calls) and give the EVs at the border to show how close it is.
+   3. Only then the reasons: the response to each action, the other lines, blockers, ICM, and the user's specific hand.
 2. Never explain a bet without the opponent's response, and never explain a check without what happens after it. The reason for an action usually shows up only in the next node.
 3. Separate solver output from inference. Sections the report flags *(includes inference)* reason beyond the data; phrase those as "likely because…".
 4. For mixed strategies, use the EV gap: near-equal EVs mean the mix is about balance, not about the hand.
@@ -99,6 +102,8 @@ python3 <skill-dir>/scripts/harness.py icm --stacks 40 30 20 10 --payouts 50 30 
 `icm` prints each player's $EV, the bubble factor of hero against villain, and the chip-EV versus ICM equity needed to call villain's all-in. Stack indices are positions in the `--stacks` list.
 
 ## Lessons from real spots
+
+- Preflop borders are usually razor-thin in EV (A5s jam +0.02bb vs A6s −0.01bb at 11bb). Present the border as where the range stops, not as a big principle, and explain the shape instead.
 
 - On a five-flush river where most of both ranges play the board, the shove isn't about folding out chops: the opponent calls most of its range. The real reason is on the check line, where the opponent shoves and the hero folds away its share of the pot.
 - Fractional combo weights on later streets are products of earlier-street frequencies; rewind before calling a range "weak" or "strong".

@@ -94,7 +94,7 @@ Distilled from how GTO Wizard's hand analyses, ICMIZER's review guide, Kevin Rab
 
 | Module | What it adds |
 |---|---|
-| `poker_harness.preflop` | Stack-depth regime, continuing-range outliers per action, hand-family patterns (e.g. A4s jams while A5s calls, KJs jams while KQs calls), jam vs small 3-bet sizing split, card removal split by how the opponent responds. |
+| `poker_harness.preflop` | Global range shape by action and family, borderline hands per action (best/worst in, what the neighbours do, EVs at the border), stack-depth regime, continuing-range outliers per action, hand-family patterns (e.g. A4s jams while A5s calls, KJs jams while KQs calls), jam vs small 3-bet sizing split, card removal split by how the opponent responds. |
 | `poker_harness.postflop` | Board texture and single-card outs, plays-the-board share, hand-type labels for grid rows, break-even fold frequency for bets, line rewind. |
 | `poker_harness.icm` | Malmuth-Harville ICM (exact up to 11 players, sampled above), bubble factor, risk premium, ICM break-even equity for all-in calls, field padding for big MTTs. |
 | `poker_harness.board`, `ranges`, `cards` | Combo counting, range parsing (`22+, A2s+, T9s-65s, AsKh:0.22`), hand evaluation for classification. |
@@ -102,9 +102,10 @@ Distilled from how GTO Wizard's hand analyses, ICMIZER's review guide, Kevin Rab
 
 ## Worked examples
 
-Both examples in `skills/explain-poker-spot/examples/` were captured from a real GTO Wizard solution (MTT, ICM, 9-max, 200 entrants, 50% left):
+The examples in `skills/explain-poker-spot/examples/` were captured from a real GTO Wizard solution (MTT, ICM, 9-max, 200 entrants, 50% left):
 
 * **`river_five_flush_shove.json`**: SB shoves 21bb on K♠J♠6♠8♠Q♠. The report shows only four cards beat the board, that LJ folds 16.3% when a zero-equity shove needs 67.5%, that on the check line LJ shoves 73.1% and SB folds 75.5%, and that LJ's flop check filtered out most of its nut flushes. Takeaway: hands that check give up the share of the pot they'd keep by shoving.
+* **`preflop_hj_11bb_vs_lj_open.json`**: HJ with 11bb facing the same kind of open. Global shape: jam 12.9% (44+, A7s+, A5s, ATo+, KJs+, KQo, QJs), fold the rest. Borderlines: the jam stops at 44 (33 folds), A5s jams while A6s folds, and the border EVs are within ±0.02bb.
 * **`preflop_sb_vs_lj_open.json`**: SB at 25bb facing LJ's 2bb open, with A4s. The report separates the small 3-bet hands (AA–JJ, AKs, AQs) from the jams (TT–88, AQo, KJs, A4s), shows LJ folds 69.4% to the jam but only 43.7% to a small 3-bet (and 4-bet jams 23%), and that A4s removes 15.2% of LJ's calls versus 8.9% of its folds. The card-removal arithmetic reproduces GTO Wizard's 69.4% fold frequency from the captured rows.
 
 ## Testing

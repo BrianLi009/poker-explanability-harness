@@ -30,6 +30,7 @@ from .sections import (
     scene_section,
     table,
 )
+from .shape import build_shape
 from .spot import HandRow, Spot
 
 
@@ -258,6 +259,87 @@ def preflop_blockers_section(ctx: Context) -> Section | None:
     return Section("blockers", TITLES["blockers"], "\n\n".join(l for l in lines if l), facts)
 
 
+def global_shape_section(ctx: Context, shape) -> Section:
+    """Point 5 for preflop: frequencies plus the hands behind each action, by family."""
+    base = range_first_section(ctx)
+    if shape is None:
+        return base
+    lines = [base.body, "**The range by action** (each hand listed under the action it plays most; other actions it uses at least 15% of the time in brackets):"]
+    for act in shape.actions:
+        if act == shape.fold_action:
+            continue
+        lines.append(f"- **{act}** ({pct(ctx.spot.node.actions[act])}): {shape.ranges[act]}")
+    if shape.fold_action:
+        lines.append(f"- **{shape.fold_action}** ({pct(ctx.spot.node.actions[shape.fold_action])}): everything else.")
+    if not shape.complete:
+        lines.append(
+            "_Only the captured hand rows are classified. If the capture lists every non-folding class, set `hands_complete: true` "
+            "so the borders against folding are exact._"
+        )
+    base.body = "\n\n".join(lines[:1]) + "\n\n" + "\n".join(lines[1:])
+    base.facts["ranges_by_action"] = shape.ranges
+    return base
+
+
+def borderline_section(ctx: Context, shape) -> Section | None:
+    """Point 7 for preflop: the best and worst hand taking each action, per family, and what's just outside."""
+    if shape is None or not shape.borders:
+        return None
+    lines = [
+        "Inside each hand family, where each action starts and stops. "
+        "\"Above\" and \"below\" are the neighbouring hands just outside the action and what they do instead."
+    ]
+    by_action: dict[str, list[dict]] = {}
+    for b in shape.borders:
+        by_action.setdefault(b["action"], []).append(b)
+    ev_notes = []
+    for act, rows in by_action.items():
+        table_rows = []
+        for b in rows:
+            above = f"{b['above']}: {b['above_does']}" if b["above"] else "– (top of family)"
+            below = f"{b['below']}: {b['below_does']}" if b["below"] else "– (bottom of family)"
+            gap_items = [f"{g}: {d}" for g, d in b["gap_does"].items()]
+            gaps = ", ".join(gap_items[:3]) + (f" and {len(gap_items) - 3} more" if len(gap_items) > 3 else "")
+            table_rows.append([b["family"], b["range"], b["best"], above, b["worst"], below, gaps])
+            for hand, note in ((b["worst"], b["ev_worst"]), (b["below"], b["ev_below"])):
+                if note and (hand, note) not in ev_notes:
+                    ev_notes.append((hand, note))
+        lines.append(
+            f"**{act}**\n\n"
+            + table(["Family", "Range", "Best", "Just above", "Worst", "Just below", "Gaps"], table_rows)
+        )
+    splits = [b for b in shape.borders if b["split"] and b["action"] != shape.fold_action]
+    if splits:
+        lines.append(
+            "Split ranges (the action skips a block of hands in the middle): "
+            + "; ".join(f"{b['action']} with {b['family']}: {b['range']}" for b in splits)
+            + ". A split usually means two reasons for the same action, e.g. value at the top and blockers or fold equity at the bottom (likely, not labelled by the solver)."
+        )
+    if ev_notes:
+        lines.append(
+            "EVs at the borders: " + "; ".join(f"{h} {n}" for h, n in ev_notes)
+            + ". Hands at a border are close to indifferent, so the exact cut-off matters less than the shape."
+        )
+    else:
+        lines.append(
+            "_Capture per-action EVs (Hands tab hover) for the worst hand in and the best hand out of each action "
+            "to show how close the border is._"
+        )
+    worst = [b for b in shape.borders if b["action"] != shape.fold_action]
+    if worst:
+        b0 = max(worst, key=lambda b: len(b["range"]))
+        ctx.lesson(
+            3,
+            f"In {b0['family']}, {b0['action']} runs from {b0['best']} down to {b0['worst']}"
+            + (f"; {b0['below']} below it {b0['below_does'].lower()}" if b0["below"] else "")
+            + ".",
+        )
+    sec = Section("outliers", "Borderline hands", "\n\n".join(lines), {"borders": shape.borders})
+    if not shape.complete:
+        sec.partial = "Hand rows don't cover every class, so some borders may sit next to hands that weren't captured."
+    return sec
+
+
 def explain_preflop(spot: Spot) -> Report:
     ctx = Context(spot)
     rep = Report(spot.title, "preflop", source=spot.source)
@@ -273,18 +355,16 @@ def explain_preflop(spot: Spot) -> Report:
         scene.covered = True
     rep.add(scene)
     rep.add(ranges_section(ctx, preflop=True))
-    rep.add(range_first_section(ctx))
+    shape = build_shape(spot.node.actions if spot.node else {}, spot.hands, bool(spot.data.get("hands_complete")))
+    rep.add(global_shape_section(ctx, shape))
     rep.add(hero_hand_section(ctx))
+    border = borderline_section(ctx, shape)
     fam = family_patterns_section(ctx)
-    out = outliers_section(ctx)
+    out = border or outliers_section(ctx)
     if fam and out.covered:
         out.body += "\n\n### " + fam.title + "\n\n" + fam.body
         out.inference = True
-        rep.add(out)
-    elif fam:
-        rep.add(fam)
-    else:
-        rep.add(out)
+    rep.add(out if out.covered or not fam else fam)
     rep.add(response_section(ctx))
     rep.add(alternatives_section(ctx))
     rep.add(rewind_section(ctx))

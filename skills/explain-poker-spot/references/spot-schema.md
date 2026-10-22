@@ -21,7 +21,8 @@ Frequencies can be written as percentages (`54.5`) or fractions (`0.545`). Stack
 | `bet` | `{size, pot_before}` | The bet or shove being explained, for break-even fold maths. |
 | `node` | node object | The decision being explained. |
 | `hero_hand` | hand row | The specific hand. |
-| `hands` | list of hand rows | Grid or Summary rows for outlier detection. |
+| `hands` | list of hand rows | Grid or Summary rows: the global shape, borderlines and outliers are built from them. |
+| `hands_complete` | bool | Preflop: `true` when `hands` lists every class that doesn't pure-fold, so unlisted classes count as folds and the borders against folding are exact. |
 | `equity` | `{seat: {combos, equity, eqr, ev}}` | Equity chart tab. |
 | `breakdown` | `{seat: [{category, pct, combos, strategy?}]}` | Breakdown tab. |
 | `ranges` | `{seat: range}` | Ranges for card counting and blockers (see Ranges). |

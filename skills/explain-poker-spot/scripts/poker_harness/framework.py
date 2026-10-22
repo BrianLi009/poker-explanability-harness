@@ -20,7 +20,7 @@ CHECKLIST: list[tuple[str, str, str]] = [
     ("ranges", "Shape of both ranges", "Breakdown tab and Equity chart for both players, or the Ranges tab."),
     ("range_first", "What the whole range does", "Overview actions with frequencies and combos."),
     ("hero_hand", "Where the hand sits and its EV", "Strategy + EV for the hand (Hands tab or Summary)."),
-    ("outliers", "Outlier hands and why", "Per-hand strategy rows (Summary tab or grid)."),
+    ("outliers", "Borderline and outlier hands", "Per-hand strategy rows (Summary tab or grid), ideally every class; per-action EVs for the hands at each border."),
     ("response", "The opponent's response", "The next node: the opponent's actions facing your action."),
     ("alternatives", "What happens on the other line", "The node after your other main action (e.g. after a check)."),
     ("rewind", "How the ranges got here", "Earlier-street frequencies for the key combos."),
@@ -43,6 +43,7 @@ class Section:
     covered: bool = True
     inference: bool = False  # True when the section reasons beyond the solver output
     partial: str | None = None  # set when covered from thin data: says what's missing
+    na: str | None = None  # set when the point doesn't apply to this spot: says why
 
     def markdown(self) -> str:
         head = f"## {self.title}"
@@ -90,6 +91,8 @@ class Report:
             covered = bool(s and s.covered)
             if self.module == "preflop" and key == "board":
                 status, note = "n/a", "No board preflop."
+            elif s is not None and s.na:
+                status, note = "n/a", s.na
             elif self.module == "preflop" and key == "rewind" and not covered:
                 status, note = "n/a", "Earlier folds rarely filter a preflop range; capture only for later preflop nodes."
             elif covered and s.partial:

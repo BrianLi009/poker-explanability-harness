@@ -15,9 +15,9 @@ Every report follows the same checklist. It's distilled from how strong coaches 
 | 2 | Set the scene | Format, stacks, positions, pot, effective stack, who covers whom. |
 | 3 | Read the board | Texture and what actually beats the board. |
 | 4 | Shape of both ranges | Equity, EQR, combos and categories for both players. |
-| 5 | What the whole range does | Action frequencies before any single hand. |
+| 5 | What the whole range does | Action frequencies before any single hand. Preflop: the global shape, each action's hands as compact ranges by family. |
 | 6 | Where the hand sits and its EV | The hand's strategy, EV gap, and whether it's pure or mixed. |
-| 7 | Outlier hands and why | Hands that deviate from the range and the pattern behind them. |
+| 7 | Borderline and outlier hands | Preflop: per family, the best and worst hand taking each action and what the neighbours just outside do, with EVs at the border. Postflop: hands that deviate from the range and the pattern behind them. |
 | 8 | The opponent's response | How the opponent reacts, and what that says about why the action works. |
 | 9 | What happens on the other line | The node after the alternative action. |
 | 10 | How the ranges got here | Earlier-street frequencies that shaped the current range. |
