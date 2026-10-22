@@ -28,6 +28,8 @@ Frequencies can be written as percentages (`54.5`) or fractions (`0.545`). Stack
 | `ranges` | `{seat: range}` | Ranges for card counting and blockers (see Ranges). |
 | `ranges_partial` | list of seats | Ranges that only list some combos (e.g. just the strong ones). |
 | `response` | node object | The opponent's node right after the hero's action. |
+| `response_path` | list of `{player, actions}` | Players who act between the hero and the responder (e.g. CO, BTN, SB, BB folding to a jam), for the dashboard's response funnel. |
+| `dashboard_title` | string | Page name for the dashboard (default: built from seat, depth, street and action, e.g. "HJ 11bb Preflop Jam"). |
 | `alternatives` | list of `{action?, line, steps: [node], note?}` | What happens after each of the hero's other actions. Set `action` to the action's GTO Wizard name (e.g. `"Raise 6"`) so the report can tell which actions still have no line. |
 | `compare_hands` | list of hands | Preflop: hands to compare with the hero hand for card removal (defaults to the same-family neighbours, e.g. A5s and A3s for A4s). |
 | `rewind` | object | Earlier-street frequencies, see below. |

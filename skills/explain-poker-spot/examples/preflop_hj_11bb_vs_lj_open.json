@@ -1032,5 +1032,37 @@
   "LJ's range is its full opening range at the response node with GTO Wizard's weights (311 combos).",
   "Payout ladder not captured, so ICM is qualitative."
  ],
- "hands_complete": true
+ "hands_complete": true,
+ "response_path": [
+  {
+   "player": "CO",
+   "actions": {
+    "Allin 53": 0.82,
+    "Raise 22": 3.01,
+    "Fold": 96.17
+   }
+  },
+  {
+   "player": "BTN",
+   "actions": {
+    "Allin 17": 5.13,
+    "Fold": 94.87
+   }
+  },
+  {
+   "player": "SB",
+   "actions": {
+    "Allin 41": 5.13,
+    "Fold": 94.87
+   }
+  },
+  {
+   "player": "BB",
+   "actions": {
+    "Allin 23": 5.88,
+    "Fold": 94.12
+   }
+  }
+ ],
+ "lesson": "At about 11bb facing an open it's jam or fold: jam hands that are happy to be called, because the opener calls about half the time."
 }

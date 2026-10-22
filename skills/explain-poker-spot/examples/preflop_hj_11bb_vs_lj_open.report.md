@@ -162,11 +162,11 @@ _Partial: Qualitative only. Add the payout ladder (`format.payouts`) for bubble 
 
 ## One-sentence takeaway
 
-**LJ folds 46.9%, well short of the 70.4% a zero-equity bluff needs, so every hand that bets has to earn when called too.**
+**At about 11bb facing an open it's jam or fold: jam hands that are happy to be called, because the opener calls about half the time.**
 
 Also worth remembering:
+- LJ folds 46.9%, well short of the 70.4% a zero-equity bluff needs, so every hand that bets has to earn when called too.
 - A5s blocks LJ's continuing hands (15.4% removed) more than its folds (10.3%), which helps make it a candidate for aggression.
-- A5s is more aggressive than A6s (100.0% vs 0.0%): aggression goes to the hands with the right blockers and the least to lose by folding later, not simply the strongest.
 
 Notes:
 - HJ rows list every class HJ jams plus a few notable folds; all other classes fold 100%.

@@ -1,0 +1,597 @@
+<title>HJ 11bb Preflop Jam</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..100,400..800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a solver-console sheet. Summary band on top, then the coach's order:
+   global shape (range grid + action ranges), borderlines, EV at the border,
+   the table's response, card removal, other lines, ICM, coverage. */
+:root {
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --ink: #17202a;
+  --muted: #5b6878;
+  --line: #d6dde5;
+  --soft: #e4e9ef;
+  --accent: #1d6b57;
+  --accent-ink: #ffffff;
+  --a-allin: #7a1c2b;
+  --a-raise3: #a1283a;
+  --a-raise2: #c9433a;
+  --a-raise1: #e0735a;
+  --a-call: #3a9a5c;
+  --a-check: #4b82c4;
+  --a-fold: #3e6fae;
+  --good: #2f8a55;
+  --warn: #b7791f;
+  --bad: #b23a3a;
+  --empty: #e9edf2;
+  --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141a; --panel: #161d25; --ink: #e5eaf0; --muted: #91a0b0; --line: #26313d; --soft: #1d2631;
+    --accent: #47b394; --accent-ink: #08130f; --empty: #1b232c;
+    --a-fold: #4a7cc0; --a-check: #5b90d0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f141a; --panel: #161d25; --ink: #e5eaf0; --muted: #91a0b0; --line: #26313d; --soft: #1d2631;
+  --accent: #47b394; --accent-ink: #08130f; --empty: #1b232c;
+  --a-fold: #4a7cc0; --a-check: #5b90d0;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(26px, 4vw, 38px); font-weight: 800; font-stretch: 75%; letter-spacing: -0.01em; line-height: 1.05; }
+h2 { font-size: 15px; font-weight: 700; font-stretch: 80%; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+h3 { font-size: 16px; font-weight: 700; }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.step { font-family: var(--font-data); font-size: 12px; color: var(--accent); margin-right: 8px; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 900px) { .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); } }
+
+/* Header */
+.eyebrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; background: var(--soft); color: var(--muted); }
+.chip.accent { background: var(--accent); color: var(--accent-ink); }
+header.top { display: flex; flex-direction: column; gap: 10px; }
+.source { font-size: 12.5px; color: var(--muted); max-width: 90ch; }
+.seats { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 6px; }
+.seat { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; background: var(--panel); display: flex; flex-direction: column; gap: 1px; }
+.seat .name { font-weight: 700; font-size: 13px; font-stretch: 85%; font-family: var(--font-display); }
+.seat .stack { font-family: var(--font-data); font-size: 13px; }
+.seat .tag { font-size: 11px; color: var(--muted); }
+.seat.hero { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.seat.villain { border-color: var(--a-raise2); box-shadow: inset 0 0 0 1px var(--a-raise2); }
+.board { display: flex; gap: 6px; }
+.card { width: 38px; height: 52px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 19px; }
+.suit-s { color: var(--ink); } .suit-h { color: #c4313b; } .suit-d { color: #2f6fd0; } .suit-c { color: #2f8a55; }
+
+/* Summary band */
+.summary { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 18px; align-items: stretch; }
+@media (max-width: 900px) { .summary { grid-template-columns: minmax(0, 1fr); } }
+.takeaway { background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+.takeaway .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.85; font-weight: 700; }
+.takeaway p { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.35; font-family: var(--font-display); font-stretch: 92%; }
+.takeaway ul { margin: 4px 0 0; padding-left: 18px; font-size: 14px; opacity: 0.92; }
+
+/* Action bar */
+.actbar { display: flex; height: 34px; border-radius: 7px; overflow: hidden; border: 1px solid var(--line); }
+.actbar > div { display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--font-data); font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; min-width: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; }
+.sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.rangelist { display: flex; flex-direction: column; gap: 8px; }
+.rangelist .row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+@media (max-width: 560px) { .rangelist .row { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+.rangelist .who { font-weight: 700; font-size: 14px; }
+.rangelist .hands { font-family: var(--font-data); font-size: 13px; overflow-wrap: anywhere; }
+
+/* Range grid */
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { font: inherit; font-size: 13px; font-weight: 600; padding: 5px 11px; border-radius: 99px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.tab[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tab:focus-visible, .ladder button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rgrid-wrap { overflow-x: auto; }
+.rgrid { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); gap: 2px; min-width: 300px; }
+.cell { position: relative; aspect-ratio: 1 / 1; border-radius: 3px; overflow: hidden; background: var(--empty); display: flex; }
+.cell .bars { position: absolute; inset: 0; display: flex; }
+.cell .bars > i { display: block; height: 100%; }
+.cell .lab { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-stretch: 75%; font-size: clamp(7.5px, 1.1vw, 12.5px); color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,0.35); pointer-events: none; }
+.cell.empty .lab { color: var(--muted); text-shadow: none; opacity: 0.6; }
+.cell.dim { opacity: 0.35; }
+.cell.mark-in { box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px var(--ink); z-index: 1; }
+.cell.mark-out { box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px var(--warn); z-index: 1; }
+.cell.hero-hand { box-shadow: inset 0 0 0 2px #fff, 0 0 0 3px var(--accent); z-index: 2; }
+.tip { position: fixed; z-index: 20; pointer-events: none; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.4; max-width: 260px; }
+.keyline { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--muted); }
+.keybox { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: -2px; background: var(--empty); }
+
+/* Ladders */
+.ladders { display: flex; flex-direction: column; gap: 10px; }
+.ladder { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: center; }
+@media (max-width: 560px) { .ladder { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+.ladder .fam { font-size: 13px; font-weight: 600; }
+.ladder .rungs { display: grid; grid-template-columns: repeat(13, minmax(22px, 1fr)); gap: 2px; overflow-x: auto; }
+.ladder .rungs .cell { aspect-ratio: auto; height: 30px; }
+.ladder .note { grid-column: 2; font-size: 12.5px; color: var(--muted); }
+@media (max-width: 560px) { .ladder .note { grid-column: 1; } }
+
+/* Charts */
+svg text { fill: var(--muted); font-family: var(--font-data); font-size: 11px; }
+svg .ink { fill: var(--ink); }
+.funnel { display: flex; flex-direction: column; gap: 8px; }
+.frow { display: grid; grid-template-columns: 110px minmax(0, 1fr) 92px; gap: 10px; align-items: center; font-size: 13px; }
+.frow .bar { height: 18px; background: var(--soft); border-radius: 4px; overflow: hidden; display: flex; }
+.frow .bar > i { display: block; height: 100%; }
+.frow .val { font-family: var(--font-data); text-align: right; }
+.gauge { position: relative; height: 26px; background: var(--soft); border-radius: 6px; overflow: visible; }
+.gauge .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: var(--a-fold); }
+.gauge .need { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--bad); }
+.gauge .needlab { position: absolute; top: -22px; transform: translateX(-50%); font-size: 11.5px; color: var(--bad); font-family: var(--font-data); white-space: nowrap; }
+.stat { display: flex; flex-direction: column; gap: 2px; }
+.stat .big { font-family: var(--font-data); font-size: 26px; font-weight: 600; }
+.stats { display: flex; gap: 24px; flex-wrap: wrap; }
+table.t { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.t th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+table.t td { padding: 6px 8px; border-bottom: 1px solid var(--soft); vertical-align: top; }
+table.t td.num { text-align: right; }
+.tbl-wrap { overflow-x: auto; }
+.cov { display: flex; flex-wrap: wrap; gap: 6px; }
+.cov span { font-size: 12.5px; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--line); display: inline-flex; gap: 6px; align-items: center; }
+.cov .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.evsvg { width: 100%; max-width: 620px; height: auto; display: block; }
+.alt { border-left: 3px solid var(--line); padding-left: 12px; display: flex; flex-direction: column; gap: 6px; }
+p { margin: 0; }
+.prose { max-width: 70ch; font-size: 14px; }
+footer { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .cell, .tab { transition: opacity .15s, box-shadow .15s, background .15s; } }
+</style>
+
+<div class="wrap" id="app"></div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const D = {"title": "HJ (11bb) facing LJ's 2bb open (MTT, ICM, 25% left)", "source": "GTO Wizard AI solution, MTT General ICM 9-max, 200 players, 25% of the field left. Captured on 2026-10-22 from the Summary tab of each node (all 1326 combos, averaged into hand classes).", "module": "preflop", "format": {"game": "MTT", "structure": "9-max, 200 entrants", "phase": "25% of the field left (about 50 players)", "icm": true, "average_stack": 35}, "hero": "HJ", "villain": "LJ", "table": [{"seat": "UTG", "stack": 35.125, "behind": null}, {"seat": "UTG1", "stack": 29.125, "behind": null}, {"seat": "UTG2", "stack": 47.125, "behind": null}, {"seat": "LJ", "stack": 59.125, "behind": 57.0}, {"seat": "HJ", "stack": 11.125, "behind": 11.0}, {"seat": "CO", "stack": 53.125, "behind": null}, {"seat": "BTN", "stack": 17.125, "behind": null}, {"seat": "SB", "stack": 41.125, "behind": null}, {"seat": "BB", "stack": 23.125, "behind": null}], "history": [{"street": "preflop", "actions": "UTG, UTG1 and UTG2 fold, LJ raises to 2, HJ to act"}], "pot": 4.63, "board": [], "scene": {"pot": 4.63, "hero_behind": 11.0, "villain_behind": 57.0, "effective": 11.0, "spr": 2.375809935205184, "covers": "LJ"}, "node": {"player": "HJ", "actions": {"Allin 11": 12.94, "Call": 0.01, "Fold": 87.05}, "combos": {}}, "fold_action": "Fold", "ranges_by_action": {"Allin 11": "44+, A7s+, A5s, A4s (41%), ATo+, KJs+, KQo, QJs"}, "hero_hand": {"hand": "A5s", "class": "A5s", "strategy": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": {"Allin 11": 0.02, "Call": 0.01, "Fold": 0.0}, "ev_best": 0.02}, "grid": {"AA": {"s": {"Allin 11": 99.5, "Call": 0.5, "Fold": 0.0}, "ev": null, "evb": 2.48, "w": null, "label": null}, "AKs": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 1.16, "w": null, "label": null}, "AQs": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.8, "w": null, "label": null}, "AJs": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.5, "w": null, "label": null}, "ATs": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.29, "w": null, "label": null}, "A9s": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.11, "w": null, "label": null}, "A8s": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.05, "w": null, "label": null}, "A7s": {"s": {"Allin 11": 99.9, "Call": 0.0, "Fold": 0.1}, "ev": null, "evb": 0.02, "w": null, "label": null}, "A6s": {"s": {"Allin 11": 0.0, "Call": 0.2, "Fold": 99.8}, "ev": {"Allin 11": -0.01, "Call": 0.0, "Fold": 0.0}, "evb": 0.0, "w": null, "label": null}, "A5s": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": {"Allin 11": 0.02, "Call": 0.01, "Fold": 0.0}, "evb": 0.02, "w": null, "label": null}, "A4s": {"s": {"Allin 11": 40.9, "Call": 0.3, "Fold": 58.9}, "ev": {"Allin 11": 0.0, "Call": 0.0, "Fold": 0.0}, "evb": 0.0, "w": null, "label": null}, "A3s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "A2s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "AKo": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 1.05, "w": null, "label": null}, "KK": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 1.83, "w": null, "label": null}, "KQs": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.22, "w": null, "label": null}, "KJs": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.08, "w": null, "label": null}, "KTs": {"s": {"Allin 11": 0.0, "Call": 0.4, "Fold": 99.6}, "ev": {"Allin 11": -0.01, "Call": 0.0, "Fold": 0.0}, "evb": 0.0, "w": null, "label": null}, "AQo": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.67, "w": null, "label": null}, "KQo": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.05, "w": null, "label": null}, "QQ": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 1.4, "w": null, "label": null}, "QJs": {"s": {"Allin 11": 99.3, "Call": 0.7, "Fold": 0.0}, "ev": null, "evb": 0.01, "w": null, "label": null}, "QTs": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "AJo": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.34, "w": null, "label": null}, "KJo": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": {"Allin 11": -0.1, "Call": -0.03, "Fold": 0.0}, "evb": 0.0, "w": null, "label": null}, "JJ": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 1.04, "w": null, "label": null}, "JTs": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "ATo": {"s": {"Allin 11": 99.9, "Call": 0.1, "Fold": 0.0}, "ev": {"Allin 11": 0.12, "Call": 0.12, "Fold": 0.0}, "evb": 0.12, "w": null, "label": null}, "TT": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.76, "w": null, "label": null}, "T9s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "A9o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": {"Allin 11": -0.07, "Call": 0.0, "Fold": 0.0}, "evb": 0.0, "w": null, "label": null}, "99": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.5, "w": null, "label": null}, "88": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.36, "w": null, "label": null}, "77": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.26, "w": null, "label": null}, "66": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.17, "w": null, "label": null}, "55": {"s": {"Allin 11": 100.0, "Call": 0.0, "Fold": 0.0}, "ev": null, "evb": 0.08, "w": null, "label": null}, "44": {"s": {"Allin 11": 99.8, "Call": 0.2, "Fold": 0.0}, "ev": null, "evb": 0.02, "w": null, "label": null}, "33": {"s": {"Allin 11": 1.5, "Call": 0.0, "Fold": 98.5}, "ev": {"Allin 11": -0.01, "Call": -0.04, "Fold": 0.0}, "evb": 0.0, "w": null, "label": null}, "22": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K9s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K8s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K7s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K6s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K5s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K4s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K3s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K2s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q9s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q8s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q7s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q6s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q5s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q4s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q3s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q2s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "QJo": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J9s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J8s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J7s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J6s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J5s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J4s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J3s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J2s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "KTo": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "QTo": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "JTo": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T8s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T7s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T6s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T5s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T4s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T3s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T2s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K9o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q9o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J9o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T9o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "98s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "97s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "96s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "95s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "94s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "93s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "92s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "A8o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K8o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q8o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J8o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T8o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "98o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "87s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "86s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "85s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "84s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "83s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "82s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "A7o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K7o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q7o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J7o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T7o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "97o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "87o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "76s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "75s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "74s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "73s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "72s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "A6o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K6o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q6o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J6o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T6o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "96o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "86o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "76o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "65s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "64s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "63s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "62s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "A5o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K5o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q5o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J5o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T5o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "95o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "85o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "75o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "65o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "54s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "53s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "52s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "A4o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K4o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q4o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J4o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T4o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "94o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "84o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "74o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "64o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "54o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "43s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "42s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "A3o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K3o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q3o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J3o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T3o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "93o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "83o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "73o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "63o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "53o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "43o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "32s": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "A2o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "K2o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "Q2o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "J2o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "T2o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "92o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "82o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "72o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "62o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "52o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "42o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}, "32o": {"s": {"Allin 11": 0.0, "Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": null, "label": null}}, "grid_complete": true, "border_hands": {"44": "in", "33": "out", "A5s": "in", "A4s": "out", "A6s": "out", "ATo": "in", "A9o": "out", "KJs": "in", "KTs": "out", "KQo": "in", "KJo": "out", "QJs": "in", "QTs": "out"}, "borders": [{"action": "Allin 11", "family": "Pocket pairs", "range": "44+", "split": false, "freq_worst": 99.8, "best": "AA", "worst": "44", "above": null, "above_does": null, "below": "33", "below_does": "Fold 98%", "gaps": [], "gap_does": {}, "ev_worst": "", "ev_below": "Allin 11 -0.01 vs Fold +0.00bb"}, {"action": "Allin 11", "family": "Suited aces (Axs)", "range": "A7s+, A5s", "split": true, "freq_worst": 100.0, "best": "AKs", "worst": "A5s", "above": null, "above_does": null, "below": "A4s", "below_does": "Fold 59%", "gaps": ["A6s"], "gap_does": {"A6s": "Fold"}, "ev_worst": "Allin 11 +0.02 vs Call +0.01bb", "ev_below": "Allin 11 +0.00 vs Call +0.00bb"}, {"action": "Allin 11", "family": "Offsuit aces (Axo)", "range": "ATo+", "split": false, "freq_worst": 99.9, "best": "AKo", "worst": "ATo", "above": null, "above_does": null, "below": "A9o", "below_does": "Fold", "gaps": [], "gap_does": {}, "ev_worst": "Allin 11 +0.12 vs Call +0.12bb", "ev_below": "Allin 11 -0.07 vs Call +0.00bb"}, {"action": "Allin 11", "family": "Suited kings (Kxs)", "range": "KJs+", "split": false, "freq_worst": 100.0, "best": "KQs", "worst": "KJs", "above": null, "above_does": null, "below": "KTs", "below_does": "Fold", "gaps": [], "gap_does": {}, "ev_worst": "", "ev_below": "Allin 11 -0.01 vs Call +0.00bb"}, {"action": "Allin 11", "family": "Offsuit kings (Kxo)", "range": "KQo", "split": false, "freq_worst": 100.0, "best": "KQo", "worst": "KQo", "above": null, "above_does": null, "below": "KJo", "below_does": "Fold", "gaps": [], "gap_does": {}, "ev_worst": "", "ev_below": "Allin 11 -0.10 vs Fold +0.00bb"}, {"action": "Allin 11", "family": "Suited queens (Qxs)", "range": "QJs", "split": false, "freq_worst": 99.3, "best": "QJs", "worst": "QJs", "above": null, "above_does": null, "below": "QTs", "below_does": "Fold", "gaps": [], "gap_does": {}, "ev_worst": "", "ev_below": ""}], "families": [{"key": "pairs", "name": "Pocket pairs", "members": ["AA", "KK", "QQ", "JJ", "TT", "99", "88", "77", "66", "55", "44", "33", "22"]}, {"key": "Axs", "name": "Suited aces (Axs)", "members": ["AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s"]}, {"key": "Axo", "name": "Offsuit aces (Axo)", "members": ["AKo", "AQo", "AJo", "ATo", "A9o", "A8o", "A7o", "A6o", "A5o", "A4o", "A3o", "A2o"]}, {"key": "Kxs", "name": "Suited kings (Kxs)", "members": ["KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s"]}, {"key": "Kxo", "name": "Offsuit kings (Kxo)", "members": ["KQo", "KJo", "KTo", "K9o", "K8o", "K7o", "K6o", "K5o", "K4o", "K3o", "K2o"]}, {"key": "Qxs", "name": "Suited queens (Qxs)", "members": ["QJs", "QTs", "Q9s", "Q8s", "Q7s", "Q6s", "Q5s", "Q4s", "Q3s", "Q2s"]}, {"key": "Qxo", "name": "Offsuit queens (Qxo)", "members": ["QJo", "QTo", "Q9o", "Q8o", "Q7o", "Q6o", "Q5o", "Q4o", "Q3o", "Q2o"]}, {"key": "Jxs", "name": "Suited jacks (Jxs)", "members": ["JTs", "J9s", "J8s", "J7s", "J6s", "J5s", "J4s", "J3s", "J2s"]}, {"key": "Jxo", "name": "Offsuit jacks (Jxo)", "members": ["JTo", "J9o", "J8o", "J7o", "J6o", "J5o", "J4o", "J3o", "J2o"]}, {"key": "Txs", "name": "Suited tens (Txs)", "members": ["T9s", "T8s", "T7s", "T6s", "T5s", "T4s", "T3s", "T2s"]}, {"key": "Txo", "name": "Offsuit tens (Txo)", "members": ["T9o", "T8o", "T7o", "T6o", "T5o", "T4o", "T3o", "T2o"]}, {"key": "9xs", "name": "Suited nines (9xs)", "members": ["98s", "97s", "96s", "95s", "94s", "93s", "92s"]}, {"key": "9xo", "name": "Offsuit nines (9xo)", "members": ["98o", "97o", "96o", "95o", "94o", "93o", "92o"]}, {"key": "8xs", "name": "Suited eights (8xs)", "members": ["87s", "86s", "85s", "84s", "83s", "82s"]}, {"key": "8xo", "name": "Offsuit eights (8xo)", "members": ["87o", "86o", "85o", "84o", "83o", "82o"]}, {"key": "7xs", "name": "Suited sevens (7xs)", "members": ["76s", "75s", "74s", "73s", "72s"]}, {"key": "7xo", "name": "Offsuit sevens (7xo)", "members": ["76o", "75o", "74o", "73o", "72o"]}, {"key": "6xs", "name": "Suited sixes (6xs)", "members": ["65s", "64s", "63s", "62s"]}, {"key": "6xo", "name": "Offsuit sixes (6xo)", "members": ["65o", "64o", "63o", "62o"]}, {"key": "5xs", "name": "Suited fives (5xs)", "members": ["54s", "53s", "52s"]}, {"key": "5xo", "name": "Offsuit fives (5xo)", "members": ["54o", "53o", "52o"]}, {"key": "4xs", "name": "Suited fours (4xs)", "members": ["43s", "42s"]}, {"key": "4xo", "name": "Offsuit fours (4xo)", "members": ["43o", "42o"]}, {"key": "3xs", "name": "Suited threes (3xs)", "members": ["32s"]}, {"key": "3xo", "name": "Offsuit threes (3xo)", "members": ["32o"]}], "ev_border": [{"hand": "33", "ev": {"Allin 11": -0.01, "Call": -0.04, "Fold": 0.0}, "takes": "Fold"}, {"hand": "A5s", "ev": {"Allin 11": 0.02, "Call": 0.01, "Fold": 0.0}, "takes": "Allin 11"}, {"hand": "A4s", "ev": {"Allin 11": 0.0, "Call": 0.0, "Fold": 0.0}, "takes": "Fold"}, {"hand": "ATo", "ev": {"Allin 11": 0.12, "Call": 0.12, "Fold": 0.0}, "takes": "Allin 11"}, {"hand": "A9o", "ev": {"Allin 11": -0.07, "Call": 0.0, "Fold": 0.0}, "takes": "Fold"}, {"hand": "KTs", "ev": {"Allin 11": -0.01, "Call": 0.0, "Fold": 0.0}, "takes": "Fold"}, {"hand": "KJo", "ev": {"Allin 11": -0.1, "Call": -0.03, "Fold": 0.0}, "takes": "Fold"}, {"hand": "A6s", "ev": {"Allin 11": -0.01, "Call": 0.0, "Fold": 0.0}, "takes": "Fold"}], "response": {"player": "LJ", "facing": "Allin 11 (after CO, BTN, SB and BB fold)", "actions": {"Call": 53.07, "Fold": 46.93}, "pot_odds": 36.5, "note": "Players behind act first: CO folds 96.2% (re-jams or isolates with 99+, AQs+, AKo), BTN folds 94.9% and SB folds 94.9% (both call 99+, AQs+, AQo+), BB folds 94.1% (calls 88+, AJs+, AQo+).", "grid": {"55": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.19, "w": 1.0, "label": null}, "66": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.32, "w": 1.0, "label": null}, "77": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.44, "w": 1.0, "label": null}, "88": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.58, "w": 1.0, "label": null}, "99": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.73, "w": 1.0, "label": null}, "AA": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 2.46, "w": 1.0, "label": null}, "AKs": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 1.17, "w": 1.0, "label": null}, "AQs": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.9, "w": 1.0, "label": null}, "AJs": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.61, "w": 1.0, "label": null}, "ATs": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.36, "w": 1.0, "label": null}, "A9s": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.16, "w": 1.0, "label": null}, "A8s": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.09, "w": 1.0, "label": null}, "A7s": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.03, "w": 1.0, "label": null}, "A6s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "A5s": {"s": {"Call": 44.3, "Fold": 55.7}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "A4s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "A3s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "A2s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "AKo": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 1.07, "w": 1.0, "label": null}, "AQo": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.79, "w": 1.0, "label": null}, "AJo": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.48, "w": 1.0, "label": null}, "ATo": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.21, "w": 1.0, "label": null}, "A9o": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "A8o": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "A7o": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 0.24, "label": null}, "A5o": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 0.56, "label": null}, "KK": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 1.78, "w": 1.0, "label": null}, "KQs": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.22, "w": 1.0, "label": null}, "KJs": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.07, "w": 1.0, "label": null}, "KTs": {"s": {"Call": 81.7, "Fold": 18.3}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "K9s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "K8s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "K7s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "K6s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "K5s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 0.36, "label": null}, "K4s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 0.27, "label": null}, "KQo": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.06, "w": 1.0, "label": null}, "KJo": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "KTo": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "QQ": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 1.47, "w": 1.0, "label": null}, "QJs": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.02, "w": 1.0, "label": null}, "QTs": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "Q9s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "Q8s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 0.9, "label": null}, "QJo": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "QTo": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 0.91, "label": null}, "JJ": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 1.17, "w": 1.0, "label": null}, "JTs": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "J9s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}, "J8s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 0.01, "label": null}, "JTo": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 0.36, "label": null}, "TT": {"s": {"Call": 100.0, "Fold": 0.0}, "ev": null, "evb": 0.94, "w": 1.0, "label": null}, "T9s": {"s": {"Call": 0.0, "Fold": 100.0}, "ev": null, "evb": 0.0, "w": 1.0, "label": null}}}, "response_path": [{"player": "CO", "actions": {"Allin 53": 0.82, "Raise 22": 3.01, "Fold": 96.17}, "fold": 96.17, "note": null}, {"player": "BTN", "actions": {"Allin 17": 5.13, "Fold": 94.87}, "fold": 94.87, "note": null}, {"player": "SB", "actions": {"Allin 41": 5.13, "Fold": 94.87}, "fold": 94.87, "note": null}, {"player": "BB", "actions": {"Allin 23": 5.88, "Fold": 94.12}, "fold": 94.12, "note": null}], "response_facts": {"actions": {"Call": 53.07, "Fold": 46.93}, "breakeven_fold": 70.37747920665387, "mdf": 29.622520793346126, "pot_odds": 36.5}, "alternatives": [], "blockers": {"removed": 40.44, "total": 311.0, "cont_removed_pct": 15.416262724188066, "fold_removed_pct": 10.274732803507819, "fold_before": 46.932475884244376, "fold_after": 48.404420461265524, "compare": {"A5s": {"cont_removed_pct": 15.416262724188066, "fold_removed_pct": 10.274732803507819, "villain_fold_pct": 48.404420461265524}, "A6s": {"cont_removed_pct": 15.416262724188066, "fold_removed_pct": 9.56220882433543, "villain_fold_pct": 48.6019882179676}, "A4s": {"cont_removed_pct": 13.598521570528348, "fold_removed_pct": 9.062071800493307, "villain_fold_pct": 48.20869502052082}}}, "ranges_facts": {"continue_pct": 12.950000000000003, "range_width_pct": {"LJ": 23.453996983408747}}, "equity": {}, "breakdown": {}, "rewind": null, "board_facts": {}, "icm": {"qualitative_only": true}, "coverage": [{"key": "decision", "title": "Judge the decision, not the result", "status": "covered", "covered": true, "to_capture": null, "note": null}, {"key": "scene", "title": "Set the scene", "status": "covered", "covered": true, "to_capture": null, "note": null}, {"key": "board", "title": "Read the board", "status": "n/a", "covered": false, "to_capture": null, "note": "No board preflop."}, {"key": "ranges", "title": "Shape of both ranges", "status": "partial", "covered": true, "to_capture": "No equity chart or breakdown captured, so range strength and categories aren't shown. Capture the Equity chart (equity, EQR, combos) and Breakdown tab for both players.", "note": "No equity chart or breakdown captured, so range strength and categories aren't shown. Capture the Equity chart (equity, EQR, combos) and Breakdown tab for both players."}, {"key": "range_first", "title": "What the whole range does", "status": "covered", "covered": true, "to_capture": null, "note": null}, {"key": "hero_hand", "title": "Where the hand sits and its EV", "status": "covered", "covered": true, "to_capture": null, "note": null}, {"key": "outliers", "title": "Borderline and outlier hands", "status": "covered", "covered": true, "to_capture": null, "note": null}, {"key": "response", "title": "The opponent's response", "status": "covered", "covered": true, "to_capture": null, "note": null}, {"key": "alternatives", "title": "What happens on the other line", "status": "n/a", "covered": false, "to_capture": null, "note": "The range's only other option is folding (worth 0), so there's no other line to follow."}, {"key": "rewind", "title": "How the ranges got here", "status": "n/a", "covered": false, "to_capture": null, "note": "Earlier folds rarely filter a preflop range; capture only for later preflop nodes."}, {"key": "blockers", "title": "Blockers and card removal", "status": "covered", "covered": true, "to_capture": null, "note": null}, {"key": "icm", "title": "ICM versus chip EV", "status": "partial", "covered": true, "to_capture": "Qualitative only. Add the payout ladder (`format.payouts`) for bubble factors and the risk premium, or capture the same node solved in ChipEV (`icm_compare`).", "note": "Qualitative only. Add the payout ladder (`format.payouts`) for bubble factors and the risk premium, or capture the same node solved in ChipEV (`icm_compare`)."}, {"key": "lesson", "title": "One-sentence takeaway", "status": "covered", "covered": true, "to_capture": null, "note": null}], "lessons": ["At about 11bb facing an open it's jam or fold: jam hands that are happy to be called, because the opener calls about half the time.", "LJ folds 46.9%, well short of the 70.4% a zero-equity bluff needs, so every hand that bets has to earn when called too.", "A5s blocks LJ's continuing hands (15.4% removed) more than its folds (10.3%), which helps make it a candidate for aggression."], "notes": ["HJ rows list every class HJ jams plus a few notable folds; all other classes fold 100%.", "Per-action EVs (Hands tab hover) captured for A5s, A6s, A4s, KTs, 33, A9o, KJo and ATo; other rows show the Summary EV at the solver mix.", "LJ's range is its full opening range at the response node with GTO Wizard's weights (311 combos).", "Payout ladder not captured, so ICM is qualitative."], "ranks": "23456789TJQKA"};
+const $ = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") el.className = v;
+    else if (k === "style") el.style.cssText = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (v !== null && v !== undefined && v !== false) el.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid !== null && kid !== undefined && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  return el;
+};
+const pct = (x) => (x === null || x === undefined ? "–" : `${(+x).toFixed(1)}%`);
+const bb = (x) => (x === null || x === undefined ? "–" : `${x >= 0 ? "+" : ""}${(+x).toFixed(2)}bb`);
+const RANKS = D.ranks;
+
+/* ---------- action colours (GTO Wizard's language) ---------- */
+function sizeOf(a) { const m = a.match(/([\d.]+)/); return m ? parseFloat(m[1]) : 0; }
+function isAllin(a) { return /all.?in|jam|shove/i.test(a); }
+function colorMap(actions) {
+  const map = {};
+  const raises = actions.filter((a) => !isAllin(a) && /^(raise|bet)/i.test(a)).sort((x, y) => sizeOf(x) - sizeOf(y));
+  const shades = ["--a-raise1", "--a-raise2", "--a-raise3"];
+  raises.forEach((a, i) => { map[a] = `var(${shades[Math.min(shades.length - 1, raises.length === 1 ? 1 : i)]})`; });
+  for (const a of actions) {
+    if (map[a]) continue;
+    if (isAllin(a)) map[a] = "var(--a-allin)";
+    else if (/^call/i.test(a)) map[a] = "var(--a-call)";
+    else if (/^check/i.test(a)) map[a] = "var(--a-check)";
+    else if (/^fold/i.test(a)) map[a] = "var(--a-fold)";
+    else map[a] = "var(--muted)";
+  }
+  return map;
+}
+function order(actions) {
+  const rank = (a) => (isAllin(a) ? 0 : /^(raise|bet)/i.test(a) ? 1 - sizeOf(a) / 1000 : /^call/i.test(a) ? 2 : /^check/i.test(a) ? 3 : /^fold/i.test(a) ? 4 : 5);
+  return [...actions].sort((x, y) => rank(x) - rank(y));
+}
+
+/* ---------- header ---------- */
+function header() {
+  const f = D.format || {};
+  const chips = [f.game, f.structure, f.phase, f.icm ? "ICM" : null, f.average_stack ? `avg ${f.average_stack}bb` : null].filter(Boolean);
+  const scene = D.scene || {};
+  const seats = $("div", { class: "seats" }, D.table.map((r) => {
+    const role = r.seat === D.hero ? "hero" : r.seat === D.villain ? "villain" : "";
+    const tag = role === "hero" ? "explaining" : role === "villain" ? "opponent" : "";
+    return $("div", { class: `seat ${role}` },
+      $("span", { class: "name" }, r.seat),
+      $("span", { class: "stack" }, `${(+r.stack).toFixed(r.stack % 1 ? 1 : 0)}bb`),
+      $("span", { class: "tag" }, r.behind !== null && r.behind !== undefined ? `${r.behind}bb behind${tag ? " · " + tag : ""}` : tag));
+  }));
+  const parts = [
+    $("div", { class: "eyebrow" }, chips.map((c, i) => $("span", { class: i === 0 ? "chip accent" : "chip" }, c))),
+    $("h1", {}, D.title),
+  ];
+  const facts = [];
+  if (D.pot !== null && D.pot !== undefined) facts.push(`Pot ${D.pot}bb`);
+  if (scene.effective !== undefined) facts.push(`${scene.effective}bb effective`);
+  if (scene.covers) facts.push(`${scene.covers} covers ${scene.covers === D.hero ? D.villain : D.hero}`);
+  if (D.history && D.history.length) facts.push(D.history.map((h) => h.actions).join(" · "));
+  parts.push($("p", { class: "muted small" }, facts.join("  ·  ")));
+  if (D.board.length) {
+    parts.push($("div", { class: "board" }, D.board.map((c) => $("div", { class: `card suit-${c[1]}` }, c[0] + { s: "♠", h: "♥", d: "♦", c: "♣" }[c[1]]))));
+  }
+  parts.push(seats);
+  if (D.source) parts.push($("p", { class: "source" }, D.source));
+  return $("header", { class: "top" }, parts);
+}
+
+/* ---------- summary band ---------- */
+function summary() {
+  const n = D.node;
+  const left = $("div", { class: "takeaway" },
+    $("span", { class: "label" }, "Takeaway"),
+    $("p", {}, D.lessons[0] || "Capture the opponent's response to find the lesson."),
+    D.lessons.length > 1 ? $("ul", {}, D.lessons.slice(1, 3).map((l) => $("li", {}, l))) : null);
+  const right = $("section", { class: "panel" });
+  if (n) {
+    const acts = order(Object.keys(n.actions));
+    const cm = colorMap(acts);
+    right.append(
+      $("div", { class: "panel-head" }, $("h2", {}, `${n.player}'s whole range`)),
+      $("div", { class: "actbar", role: "img", "aria-label": acts.map((a) => `${a} ${pct(n.actions[a])}`).join(", ") },
+        acts.filter((a) => n.actions[a] >= 0.5).map((a) => $("div", { style: `width:${n.actions[a]}%;background:${cm[a]}`, title: `${a} ${pct(n.actions[a])}` }, n.actions[a] >= 9 ? pct(n.actions[a]) : ""))),
+      $("div", { class: "legend" }, acts.map((a) => $("span", {}, $("span", { class: "sw", style: `background:${cm[a]}` }), `${a} `, $("span", { class: "num muted" }, pct(n.actions[a]))))));
+    if (D.hero_hand) {
+      const h = D.hero_hand;
+      const st = Object.entries(h.strategy || {}).filter(([, v]) => v >= 0.5).sort((x, y) => y[1] - x[1]).map(([a, v]) => `${a} ${pct(v)}`).join(", ");
+      const ev = h.ev ? Object.entries(h.ev).map(([a, v]) => `${a} ${bb(v)}`).join(" · ") : h.ev_best !== null && h.ev_best !== undefined ? `EV ${bb(h.ev_best)}` : "";
+      right.append($("p", { class: "small" }, $("b", {}, `Your hand ${h.hand}: `), st, ev ? $("span", { class: "muted num" }, `  (${ev})`) : null));
+    }
+  }
+  return $("div", { class: "summary" }, left, right);
+}
+
+/* ---------- 13x13 grid ---------- */
+const tip = document.getElementById("tip");
+function showTip(e, html) { tip.innerHTML = html; tip.hidden = false; moveTip(e); }
+function moveTip(e) {
+  const pad = 14; const w = tip.offsetWidth; const h = tip.offsetHeight;
+  let x = e.clientX + pad; let y = e.clientY + pad;
+  if (x + w > innerWidth - 8) x = e.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = e.clientY - h - pad;
+  tip.style.left = `${Math.max(8, x)}px`; tip.style.top = `${Math.max(8, y)}px`;
+}
+function hideTip() { tip.hidden = true; }
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function classAt(i, j) {
+  const r1 = RANKS[12 - i], r2 = RANKS[12 - j];
+  if (i === j) return r1 + r2;
+  return i < j ? r1 + r2 + "s" : r2 + r1 + "o";
+}
+function cellEl(cls, row, cm, acts, opts = {}) {
+  const el = $("div", { class: "cell", role: "img" });
+  if (!row) {
+    el.classList.add("empty");
+    el.append($("span", { class: "lab" }, cls));
+    el.setAttribute("aria-label", `${cls}: not in range`);
+    return el;
+  }
+  const bars = $("span", { class: "bars" });
+  for (const a of acts) {
+    const v = row.s[a] || 0;
+    if (v > 0.2) bars.append($("i", { style: `width:${v}%;background:${cm[a]}` }));
+  }
+  el.append(bars, $("span", { class: "lab" }, cls));
+  if (row.w !== null && row.w !== undefined && row.w < 0.999) el.style.opacity = String(0.35 + 0.65 * Math.max(0, Math.min(1, row.w)));
+  const desc = acts.filter((a) => (row.s[a] || 0) >= 0.5).map((a) => `${a} ${pct(row.s[a])}`).join(", ");
+  el.setAttribute("aria-label", `${cls}: ${desc}`);
+  el.addEventListener("pointerenter", (e) => {
+    const evs = row.ev ? Object.entries(row.ev).map(([a, v]) => `${esc(a)} ${bb(v)}`).join("<br>") : row.evb !== null && row.evb !== undefined ? `EV ${bb(row.evb)}` : "";
+    showTip(e, `<b>${esc(cls)}</b>${row.w !== null && row.w !== undefined ? ` <span style="opacity:.7">weight ${(+row.w).toFixed(2)}</span>` : ""}<br>${acts.filter((a) => (row.s[a] || 0) >= 0.1).map((a) => `${esc(a)} ${pct(row.s[a])}`).join("<br>")}${evs ? `<br><span style="opacity:.75">${evs}</span>` : ""}${opts.note && opts.note[cls] ? `<br><i>${esc(opts.note[cls])}</i>` : ""}`);
+  });
+  el.addEventListener("pointermove", moveTip);
+  el.addEventListener("pointerleave", hideTip);
+  return el;
+}
+function rangeGrid(grid, actions, opts = {}) {
+  const acts = order(actions);
+  const cm = colorMap(acts);
+  const g = $("div", { class: "rgrid" });
+  for (let i = 0; i < 13; i++) for (let j = 0; j < 13; j++) {
+    const cls = classAt(i, j);
+    const el = cellEl(cls, grid[cls], cm, acts, opts);
+    if (opts.marks && opts.marks[cls] === "in") el.classList.add("mark-in");
+    if (opts.marks && opts.marks[cls] === "out") el.classList.add("mark-out");
+    if (opts.hero && cls === opts.hero) el.classList.add("hero-hand");
+    g.append(el);
+  }
+  return $("div", { class: "rgrid-wrap" }, g);
+}
+
+function shapePanel() {
+  if (!D.node || !Object.keys(D.grid).length) return null;
+  const acts = order(Object.keys(D.node.actions));
+  const cm = colorMap(acts);
+  const views = [{ key: "hero", label: `${D.node.player}'s strategy` }];
+  if (D.response && Object.keys(D.response.grid).length) views.push({ key: "resp", label: `${D.response.player} facing ${(D.response.facing || "").replace(/\s*\(.*\)/, "")}` });
+  let view = "hero"; let showMarks = Object.keys(D.border_hands).length > 0;
+  const holder = $("div");
+  const tabs = $("div", { class: "tabs" });
+  const markBtn = showMarks ? $("button", { class: "tab", "aria-pressed": "true", onclick: () => { showMarks = !showMarks; markBtn.setAttribute("aria-pressed", String(showMarks)); draw(); } }, "Mark borders") : null;
+  function draw() {
+    holder.replaceChildren();
+    tabs.replaceChildren(...views.map((v) => $("button", { class: "tab", "aria-pressed": String(v.key === view), onclick: () => { view = v.key; draw(); } }, v.label)), markBtn || "");
+    if (view === "hero") holder.append(rangeGrid(D.grid, Object.keys(D.node.actions), { marks: showMarks ? D.border_hands : null, hero: D.hero_hand && D.hero_hand.class }));
+    else holder.append(rangeGrid(D.response.grid, Object.keys(D.response.actions), { hero: D.hero_hand && D.hero_hand.class }));
+  }
+  draw();
+  const key = $("div", { class: "keyline" },
+    showMarks ? $("span", {}, $("span", { class: "keybox", style: "box-shadow:0 0 0 2px var(--ink)" }), "worst hand still taking an action") : null,
+    showMarks ? $("span", {}, $("span", { class: "keybox", style: "box-shadow:0 0 0 2px var(--warn)" }), "best hand that doesn't") : null,
+    D.hero_hand ? $("span", {}, $("span", { class: "keybox", style: "box-shadow:0 0 0 2px var(--accent)" }), `your hand (${D.hero_hand.class})`) : null,
+    $("span", {}, $("span", { class: "keybox" }), D.grid_complete ? "faded: not in range" : "grey: not captured"));
+  const left = $("section", { class: "panel" }, $("div", { class: "panel-head" }, $("h2", {}, $("span", { class: "step" }, "1"), "Global shape"), tabs), holder, key);
+  const list = $("div", { class: "rangelist" });
+  const fromRows = !Object.keys(D.ranges_by_action).length;
+  if (fromRows) {
+    const by = {};
+    for (const [cls, row] of Object.entries(D.grid)) {
+      const top = Object.entries(row.s).sort((x, y) => y[1] - x[1])[0];
+      if (top) (by[top[0]] = by[top[0]] || []).push(cls + (row.label ? ` (${row.label})` : ""));
+    }
+    for (const a of acts) {
+      if (!by[a]) continue;
+      list.append($("div", { class: "row" },
+        $("span", { class: "who" }, $("span", { class: "sw", style: `background:${cm[a]}` }), a, " ", $("span", { class: "num muted" }, pct(D.node.actions[a]))),
+        $("span", { class: "hands" }, by[a].join(", "))));
+    }
+  }
+  for (const a of fromRows ? [] : acts) {
+    const r = D.ranges_by_action[a];
+    if (r === undefined && !/^fold/i.test(a)) continue;
+    if ((D.node.actions[a] || 0) < 1) continue;
+    list.append($("div", { class: "row" },
+      $("span", { class: "who" }, $("span", { class: "sw", style: `background:${cm[a]}` }), a, " ", $("span", { class: "num muted" }, pct(D.node.actions[a]))),
+      $("span", { class: "hands" }, r !== undefined ? r : "everything else")));
+  }
+  const right = $("section", { class: "panel" },
+    $("div", { class: "panel-head" }, $("h2", {}, "The range by action")),
+    $("p", { class: "small muted" }, fromRows ? "The captured hand rows, grouped by the action each plays most." : "Each hand sits under the action it plays most; other actions it uses at least 15% of the time are in brackets."),
+    list);
+  return $("div", { class: "grid2" }, left, $("div", { class: "col" }, right, evPanel()));
+}
+
+/* ---------- borderline ladders ---------- */
+function laddersPanel() {
+  if (!D.borders.length) return null;
+  const acts = order(Object.keys(D.node.actions));
+  const cm = colorMap(acts);
+  const fams = D.families.filter((f) => D.borders.some((b) => b.family === f.name));
+  const box = $("div", { class: "ladders" });
+  for (const f of fams) {
+    const rungs = $("div", { class: "rungs" });
+    const members = f.members;
+    const pad = 13 - members.length;
+    for (const cls of members) {
+      const el = cellEl(cls, D.grid[cls], cm, acts);
+      if (D.border_hands[cls] === "in") el.classList.add("mark-in");
+      if (D.border_hands[cls] === "out") el.classList.add("mark-out");
+      if (D.hero_hand && cls === D.hero_hand.class) el.classList.add("hero-hand");
+      rungs.append(el);
+    }
+    for (let k = 0; k < pad; k++) rungs.append($("div"));
+    const notes = D.borders.filter((b) => b.family === f.name).map((b) => {
+      const below = b.below ? `; below it ${b.below} → ${b.below_does}` : "";
+      const gaps = b.gaps.length ? `; gap: ${b.gaps.slice(0, 3).map((g) => `${g} → ${b.gap_does[g]}`).join(", ")}${b.gaps.length > 3 ? "…" : ""}` : "";
+      return `${b.action}: ${b.range}${below}${gaps}`;
+    });
+    box.append($("div", { class: "ladder" }, $("span", { class: "fam" }, f.name), rungs, $("span", { class: "note" }, notes.join("  ·  "))));
+  }
+  return $("section", { class: "panel" },
+    $("div", { class: "panel-head" }, $("h2", {}, $("span", { class: "step" }, "2"), "Borderlines by family"), $("span", { class: "small muted" }, "strongest → weakest")),
+    $("p", { class: "prose muted" }, "Each row is one hand family from its strongest to its weakest hand, coloured by what the solver does. The dark outline is the worst hand still taking an action; the amber outline is the first hand that stops."),
+    box);
+}
+
+/* ---------- EV at the border ---------- */
+function evPanel() {
+  const rows = (D.ev_border || []).filter((r) => r.ev && Object.keys(r.ev).length);
+  if (!rows.length) return null;
+  const acts = order([...new Set(rows.flatMap((r) => Object.keys(r.ev)))]);
+  const cm = colorMap(acts);
+  const all = rows.flatMap((r) => Object.values(r.ev));
+  let lo = Math.min(0, ...all), hi = Math.max(0, ...all);
+  const span = Math.max(0.04, hi - lo); lo -= span * 0.08; hi += span * 0.08;
+  const W = 560, rowH = 26, left = 70, right = 18, top = 26, H = top + rows.length * rowH + 22;
+  const x = (v) => left + ((v - lo) / (hi - lo)) * (W - left - right);
+  const ns = "http://www.w3.org/2000/svg";
+  const s = (tag, a) => { const el = document.createElementNS(ns, tag); for (const k in a) el.setAttribute(k, a[k]); return el; };
+  const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, class: "evsvg", role: "img", "aria-label": "EV of each action for the hands at the borders" });
+  const ticks = niceTicks(lo, hi, 5);
+  for (const t of ticks) {
+    svg.append(s("line", { x1: x(t), x2: x(t), y1: top - 6, y2: H - 18, stroke: "var(--soft)", "stroke-width": t === 0 ? 2 : 1 }));
+    const tl = s("text", { x: x(t), y: H - 4, "text-anchor": "middle" }); tl.textContent = `${t >= 0 ? "+" : ""}${t.toFixed(2)}`; svg.append(tl);
+  }
+  const zl = s("text", { x: x(0), y: 12, "text-anchor": "middle" }); zl.textContent = "0 = fold"; svg.append(zl);
+  rows.forEach((r, i) => {
+    const y = top + i * rowH + rowH / 2;
+    const lab = s("text", { x: 8, y: y + 4, class: "ink" }); lab.textContent = r.hand; svg.append(lab);
+    const vals = acts.filter((a) => r.ev[a] !== undefined);
+    const xs = vals.map((a) => x(r.ev[a]));
+    svg.append(s("line", { x1: Math.min(...xs), x2: Math.max(...xs), y1: y, y2: y, stroke: "var(--line)", "stroke-width": 2 }));
+    for (const a of vals) {
+      const c = s("circle", { cx: x(r.ev[a]), cy: y, r: a === r.takes ? 6.5 : 4.5, fill: cm[a], stroke: a === r.takes ? "var(--ink)" : "none", "stroke-width": 1.5 });
+      const tt = document.createElementNS(ns, "title"); tt.textContent = `${r.hand}: ${a} ${bb(r.ev[a])}`; c.append(tt);
+      svg.append(c);
+    }
+  });
+  return $("section", { class: "panel" },
+    $("div", { class: "panel-head" }, $("h2", {}, $("span", { class: "step" }, "3"), "EV at the borders"), $("div", { class: "legend" }, acts.map((a) => $("span", {}, $("span", { class: "sw", style: `background:${cm[a]}` }), a)))),
+    $("p", { class: "prose muted" }, "EV of each action, in big blinds, for the hands where the strategy changes. The ringed dot is what the solver picks. When the dots sit on top of each other, the hand is close to indifferent."),
+    $("div", { class: "rgrid-wrap" }, svg));
+}
+function niceTicks(lo, hi, n) {
+  const raw = (hi - lo) / n; const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((st) => st >= raw) || raw;
+  const out = []; for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) out.push(+t.toFixed(6));
+  return out;
+}
+
+/* ---------- response funnel ---------- */
+function responsePanel() {
+  const r = D.response; if (!r) return null;
+  const rf = D.response_facts || {};
+  const rows = $("div", { class: "funnel" });
+  let through = 1; let known = true;
+  for (const p of D.response_path) {
+    const acts = order(Object.keys(p.actions)); const cm = colorMap(acts);
+    rows.append($("div", { class: "frow" }, $("span", {}, p.player),
+      $("div", { class: "bar", title: acts.map((a) => `${a} ${pct(p.actions[a])}`).join(", ") }, acts.map((a) => $("i", { style: `width:${p.actions[a]}%;background:${cm[a]}` }))),
+      $("span", { class: "val" }, p.fold !== null ? `${pct(p.fold)} fold` : "")));
+    if (p.fold === null) known = false; else through *= p.fold / 100;
+  }
+  const racts = order(Object.keys(r.actions)); const rcm = colorMap(racts);
+  const rfold = Object.entries(r.actions).find(([a]) => /^fold/i.test(a));
+  rows.append($("div", { class: "frow" }, $("b", {}, r.player),
+    $("div", { class: "bar", title: racts.map((a) => `${a} ${pct(r.actions[a])}`).join(", ") }, racts.map((a) => $("i", { style: `width:${r.actions[a]}%;background:${rcm[a]}` }))),
+    $("span", { class: "val" }, rfold ? `${pct(rfold[1])} fold` : "")));
+  const parts = [$("div", { class: "panel-head" }, $("h2", {}, $("span", { class: "step" }, "4"), "How the table responds"), $("span", { class: "small muted" }, `facing ${r.facing || "the action"}`)), rows];
+  if (rfold && rf.breakeven_fold !== undefined) {
+    const allFold = (known ? through : 1) * rfold[1];
+    const need = rf.breakeven_fold;
+    parts.push(
+      $("div", { class: "stats" },
+        $("div", { class: "stat" }, $("span", { class: "muted small" }, D.response_path.length ? "Everyone folds (rough)" : `${r.player} folds`), $("span", { class: "big" }, pct(allFold))),
+        $("div", { class: "stat" }, $("span", { class: "muted small" }, "Needed with zero equity"), $("span", { class: "big", style: "color:var(--bad)" }, pct(need))),
+        r.pot_odds !== null && r.pot_odds !== undefined ? $("div", { class: "stat" }, $("span", { class: "muted small" }, `${r.player}'s pot odds`), $("span", { class: "big" }, pct(r.pot_odds > 1 ? r.pot_odds : r.pot_odds * 100))) : null),
+      $("div", { style: "padding-top:22px" }, $("div", { class: "gauge", role: "img", "aria-label": `Fold-through ${pct(allFold)} against ${pct(need)} needed` },
+        $("div", { class: "fill", style: `width:${allFold}%` }), $("div", { class: "need", style: `left:${need}%` }), $("span", { class: "needlab", style: `left:${need}%` }, `needed ${pct(need)}`))),
+      $("p", { class: "prose muted" }, allFold < need
+        ? `Folds alone don't pay for this bet: it wins the pot uncalled about ${pct(allFold)} of the time, short of the ${pct(need)} a hand with no equity needs. The hands that take it must also do well when called.${D.response_path.length ? " The rough figure multiplies each player's fold rate and ignores card removal between them." : ""}`
+        : `Folds alone pay for this bet: ${pct(allFold)} against ${pct(need)} needed, so even hands with no equity profit.`));
+  }
+  if (r.note) parts.push($("p", { class: "small muted" }, r.note));
+  return $("section", { class: "panel" }, parts);
+}
+
+/* ---------- card removal ---------- */
+function blockersPanel() {
+  const b = D.blockers || {};
+  const comp = b.compare;
+  if (!comp && b.cont_removed_pct === undefined && !b.groups) return null;
+  const parts = [$("div", { class: "panel-head" }, $("h2", {}, $("span", { class: "step" }, "5"), "Card removal"))];
+  if (comp) {
+    const names = Object.keys(comp);
+    const vals = names.map((n) => comp[n].villain_fold_pct);
+    const lo = Math.floor(Math.min(...vals, b.fold_before || 100) - 1), hi = Math.ceil(Math.max(...vals, b.fold_before || 0) + 1);
+    const box = $("div", { class: "funnel" });
+    for (const n of names) {
+      const v = comp[n].villain_fold_pct;
+      box.append($("div", { class: "frow" }, $("span", {}, n),
+        $("div", { class: "bar" }, $("i", { style: `width:${((v - lo) / (hi - lo)) * 100}%;background:var(--a-fold)` })),
+        $("span", { class: "val" }, pct(v))));
+    }
+    parts.push($("p", { class: "prose muted" }, `${D.villain}'s fold frequency against each hand after card removal${b.fold_before !== undefined ? ` (no removal: ${pct(b.fold_before)})` : ""}. Axis runs ${lo}% to ${hi}%.`), box);
+    const spread = Math.max(...vals) - Math.min(...vals);
+    parts.push($("p", { class: "small" }, spread < 1 ? "These hands block almost the same, so card removal doesn't explain why they play differently." : "The spread here is part of why these hands play differently."));
+  } else if (b.cont_removed_pct !== undefined) {
+    parts.push($("p", { class: "prose" }, `Your hand removes ${pct(b.cont_removed_pct)} of ${D.villain}'s continuing combos and ${pct(b.fold_removed_pct)} of its folds.`));
+  }
+  if (b.groups) {
+    const t = $("table", { class: "t" }, $("thead", {}, $("tr", {}, $("th", {}, "Group"), $("th", {}, "Before"), $("th", {}, "After"), $("th", {}, "Removed"))),
+      $("tbody", {}, b.groups.filter((g) => g.removed_pct > 0).map((g) => $("tr", {}, $("td", {}, g.group), $("td", { class: "num" }, g.before), $("td", { class: "num" }, g.after), $("td", { class: "num" }, pct(g.removed_pct))))));
+    parts.push($("div", { class: "tbl-wrap" }, t));
+  }
+  return $("section", { class: "panel" }, parts);
+}
+
+/* ---------- other lines, ICM, rewind, breakdown ---------- */
+function linesPanel() {
+  const alts = D.alternatives || [];
+  if (!alts.length) return null;
+  const parts = [$("div", { class: "panel-head" }, $("h2", {}, $("span", { class: "step" }, "6"), "The other lines"))];
+  for (const a of alts) {
+    const box = $("div", { class: "alt" }, $("h3", {}, `If ${a.line}`));
+    for (const st of a.steps) {
+      const acts = order(Object.keys(st.actions)); const cm = colorMap(acts);
+      box.append($("div", { class: "frow" }, $("span", {}, `${st.player}${st.facing ? " vs " + st.facing : ""}`),
+        $("div", { class: "bar", title: acts.map((x) => `${x} ${pct(st.actions[x])}`).join(", ") }, acts.map((x) => $("i", { style: `width:${st.actions[x]}%;background:${cm[x]}` }))),
+        $("span", { class: "val" }, acts.filter((x) => st.actions[x] >= 1).slice(0, 1).map((x) => `${x.split(" ")[0]} ${pct(st.actions[x])}`)[0] || "")));
+    }
+    parts.push(box);
+  }
+  return $("section", { class: "panel" }, parts);
+}
+function icmPanel() {
+  const i = D.icm || {};
+  const f = D.format || {};
+  if (!f.icm && !Object.keys(i).length) return null;
+  const parts = [$("div", { class: "panel-head" }, $("h2", {}, "ICM"))];
+  if (i.bubble_factor) {
+    parts.push($("div", { class: "stats" }, Object.entries(i.bubble_factor).map(([k, v]) => $("div", { class: "stat" }, $("span", { class: "muted small" }, `Bubble factor, ${k}`), $("span", { class: "big" }, (+v).toFixed(2))))));
+    for (const [k, v] of Object.entries(i)) if (k.endsWith("_call")) parts.push($("p", { class: "small" }, `${k.replace("_call", "")} calling the all-in needs ${pct(100 * v.chip_required)} in chip EV and ${pct(100 * v.icm_required)} with ICM (risk premium ${pct(100 * v.risk_premium)}).`));
+  } else {
+    const shortest = [...D.table].sort((a, b) => a.stack - b.stack)[0];
+    parts.push($("p", { class: "prose" }, `This solution uses ICM. ${D.hero === shortest.seat ? `${D.hero} is the shortest stack, so every opponent covers it and an all-in risks its tournament.` : `Whoever is covered risks elimination in an all-in, so losing chips costs them more than winning chips gains.`} That makes the risky line need more equity than in chip EV.`),
+      $("p", { class: "small muted" }, "Payouts weren't captured, so no bubble factor is shown."));
+  }
+  return $("section", { class: "panel" }, parts);
+}
+function rewindPanel() {
+  const rw = D.rewind; if (!rw || !rw.rows) return null;
+  const steps = rw.steps || [];
+  const t = $("table", { class: "t" },
+    $("thead", {}, $("tr", {}, $("th", {}, "Combo"), $("th", {}, "Type"), steps.map((s) => $("th", {}, s)), $("th", {}, "Reaches"))),
+    $("tbody", {}, rw.rows.map((r) => {
+      const fr = r.freqs.map((x) => (x > 1 ? x / 100 : x));
+      const reach = fr.reduce((a, b) => a * b, 1);
+      return $("tr", {}, $("td", { class: "num" }, r.hand), $("td", {}, r.label || ""), fr.map((x) => $("td", { class: "num" }, pct(100 * x))),
+        $("td", {}, $("div", { class: "frow", style: "grid-template-columns:minmax(60px,1fr) 46px" }, $("div", { class: "bar" }, $("i", { style: `width:${100 * reach}%;background:var(--accent)` })), $("span", { class: "val" }, `${(100 * reach).toFixed(0)}%`))));
+    })));
+  return $("section", { class: "panel" }, $("div", { class: "panel-head" }, $("h2", {}, "How the range got here")), $("p", { class: "prose muted" }, `How much of each ${rw.player} combo survives each earlier street to reach this spot.`), $("div", { class: "tbl-wrap" }, t));
+}
+function breakdownPanel() {
+  const bd = D.breakdown || {}; const eq = D.equity || {};
+  if (!Object.keys(bd).length && !Object.keys(eq).length) return null;
+  const parts = [$("div", { class: "panel-head" }, $("h2", {}, "Range shape"))];
+  if (Object.keys(eq).length) parts.push($("div", { class: "stats" }, Object.entries(eq).map(([p, e]) => $("div", { class: "stat" }, $("span", { class: "muted small" }, `${p} equity · ${e.combos} combos`), $("span", { class: "big" }, pct(e.equity))))));
+  const palette = ["var(--a-allin)", "var(--a-raise2)", "var(--a-raise1)", "var(--a-call)", "var(--a-check)", "var(--a-fold)", "var(--muted)"];
+  for (const [p, cats] of Object.entries(bd)) {
+    parts.push($("div", { class: "frow", style: "grid-template-columns:110px minmax(0,1fr)" }, $("span", {}, p),
+      $("div", { class: "bar", style: "height:22px" }, cats.map((c, k) => $("i", { style: `width:${c.pct}%;background:${palette[k % palette.length]}`, title: `${c.category} ${pct(c.pct)}` })))));
+  }
+  const firstCats = Object.values(bd)[0] || [];
+  parts.push($("div", { class: "legend" }, firstCats.map((c, k) => $("span", {}, $("span", { class: "sw", style: `background:${palette[k % palette.length]}` }), c.category))));
+  return $("section", { class: "panel" }, parts);
+}
+function coveragePanel() {
+  const col = { covered: "var(--good)", partial: "var(--warn)", missing: "var(--bad)", "n/a": "var(--line)" };
+  return $("section", { class: "panel" },
+    $("div", { class: "panel-head" }, $("h2", {}, "What this explanation covers")),
+    $("div", { class: "cov" }, D.coverage.map((c) => $("span", { title: c.note || c.status }, $("span", { class: "dot", style: `background:${col[c.status]}` }), c.title))),
+    $("div", { class: "keyline" }, Object.entries(col).map(([k, v]) => $("span", {}, $("span", { class: "keybox", style: `background:${v};border-radius:50%` }), k))),
+    D.notes && D.notes.length ? $("ul", { class: "small muted", style: "margin:0;padding-left:18px" }, D.notes.map((n) => $("li", {}, n))) : null);
+}
+
+/* ---------- assemble ---------- */
+const app = document.getElementById("app");
+const shapeBlock = shapePanel();
+const blocks = [header(), summary(), shapeBlock, laddersPanel(), shapeBlock ? null : evPanel(), responsePanel()];
+const pair = [blockersPanel(), linesPanel(), icmPanel()].filter(Boolean);
+if (pair.length) blocks.push($("div", { class: pair.length === 3 ? "grid3" : pair.length === 2 ? "grid2" : "" }, pair));
+blocks.push(breakdownPanel(), rewindPanel(), coveragePanel(), $("footer", {}, "Strategy numbers come from the solver; the harness only arranges them and adds arithmetic (fold-through, card removal, ICM). Hover any cell for its strategy and EV."));
+for (const b of blocks) if (b) app.append(b);
+</script>

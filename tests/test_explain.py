@@ -173,3 +173,21 @@ def test_alternatives_not_applicable_when_only_fold_remains():
     data["alternatives"] = []
     cov = {r["key"]: r for r in explain(data).coverage()}
     assert cov["alternatives"]["status"] == "n/a"
+
+
+def test_dashboard_renders_with_embedded_data(tmp_path):
+    from poker_harness.dashboard import dashboard_data, render_dashboard
+
+    spot = load_spot(EX / "preflop_hj_11bb_vs_lj_open.json")
+    rep = explain(spot)
+    data = dashboard_data(spot, rep)
+    assert len(data["grid"]) == 169  # hands_complete fills every class
+    assert data["border_hands"]["44"] == "in" and data["border_hands"]["33"] == "out"
+    assert [p["player"] for p in data["response_path"]] == ["CO", "BTN", "SB", "BB"]
+    html = render_dashboard(spot, rep)
+    assert html.startswith("<title>HJ 11bb Preflop Jam</title>")
+    assert "__DATA__" not in html and "</script>" in html
+    river = render_dashboard(load_spot(RIVER), explain(RIVER))
+    assert '"board": ["Ks", "Js", "6s", "8s", "Qs"]' in river
+    out = tmp_path / "d.html"
+    assert main(["dashboard", str(RIVER), "-o", str(out)]) == 0 and out.stat().st_size > 10000

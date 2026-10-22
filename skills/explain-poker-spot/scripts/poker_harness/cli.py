@@ -4,6 +4,8 @@ Commands
 --------
 explain SPOT.json [--format md|json|brief] [-o OUT]
     Build the explanation for a captured spot.
+dashboard SPOT.json [-o OUT.html]
+    Render the spot as a self-contained HTML dashboard.
 check SPOT.json EXPLANATION.md
     Score a written explanation against the framework.
 validate SPOT.json
@@ -37,6 +39,10 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--format", choices=["md", "json", "brief"], default="md")
     e.add_argument("-o", "--out")
 
+    d = sub.add_parser("dashboard", help="render an HTML dashboard for a spot")
+    d.add_argument("spot")
+    d.add_argument("-o", "--out", default=None, help="output .html (default: next to the spot)")
+
     c = sub.add_parser("check", help="score a written explanation")
     c.add_argument("spot")
     c.add_argument("explanation")
@@ -69,6 +75,16 @@ def main(argv: list[str] | None = None) -> int:
             Path(a.out).write_text(text)
         else:
             sys.stdout.write(text)
+        return 0
+
+    if a.cmd == "dashboard":
+        from .dashboard import render_dashboard
+
+        spot = load_spot(a.spot)
+        html = render_dashboard(spot, explain(spot))
+        out = Path(a.out) if a.out else Path(a.spot).with_suffix(".dashboard.html")
+        out.write_text(html)
+        print(out)
         return 0
 
     if a.cmd == "check":

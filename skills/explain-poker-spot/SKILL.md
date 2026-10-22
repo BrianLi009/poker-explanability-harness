@@ -8,7 +8,7 @@ description: >
   output for preflop and postflop spots with ICM, blockers, ranges and the opponent's response. It explains
   existing solutions; it does not solve the game.
 metadata:
-  version: "0.3.0"
+  version: "0.4.0"
   author: BrianLi009
 ---
 
@@ -80,7 +80,17 @@ Use the report's facts, not its template wording; the template sentences are gen
 
 Format for the user: conversational, short paragraphs, a table only where comparing numbers. Lead with the answer to what they asked, then the supporting points. Don't paste the full harness report unless they ask for it; mention which points were covered from inference or missing data, in one line.
 
-### 5. Self-check before sending
+### 5. Dashboard
+
+Render the spot as a visual page to go with the explanation:
+
+```bash
+python3 <skill-dir>/scripts/harness.py dashboard spot.json -o dashboard.html
+```
+
+It lays the spot out in the coach's order: takeaway and whole-range bar, the 13x13 grid coloured by action (GTO Wizard's colours, borders outlined, the responder's grid on a second tab), borderline ladders per family, EV at the borders, the response funnel against the break-even fold line, card removal, the other lines, ICM, rewind and coverage. Panels without data are left out. The page is self-contained HTML. Where the Artifact tool is available, publish it as an artifact and say in one line what it shows; otherwise send the file. Set `lesson` in the spot to control the takeaway headline, and `response_path` (players who act before the responder, with their action frequencies) to draw the full funnel.
+
+### 6. Self-check before sending
 
 Save the draft and lint it:
 
@@ -116,5 +126,5 @@ python3 <skill-dir>/scripts/harness.py icm --stacks 40 30 20 10 --payouts 50 30 
 - `references/spot-schema.md`: the spot file format.
 - `references/capture-guide.md`: which GTO Wizard tab holds each number.
 - `examples/`: two captured spots with their rendered reports.
-- `scripts/harness.py`: CLI (explain, validate, check, board, icm).
+- `scripts/harness.py`: CLI (explain, dashboard, validate, check, board, icm).
 - `scripts/gtowizard_summary.js`: reads every combo from GTO Wizard's Summary tab.
