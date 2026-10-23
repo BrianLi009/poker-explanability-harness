@@ -49,6 +49,7 @@ Run from the skill folder with no install (`python3 skills/explain-poker-spot/sc
 
 ```bash
 harness.py explain spot.json [--format md|json|brief] [-o OUT]   # report, facts, or LLM brief
+harness.py inline spot.json -o inline.html                       # compact visual shown inside the chat (default)
 harness.py dashboard spot.json -o dashboard.html                 # visual page for the spot
 harness.py validate spot.json                                    # data problems
 harness.py check spot.json draft.md                              # score a written explanation

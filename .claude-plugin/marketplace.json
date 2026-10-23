@@ -11,7 +11,7 @@
       "name": "poker-explainer",
       "source": "./",
       "description": "Explains GTO Wizard tournament spots (preflop, postflop, ICM) in a coach's framework.",
-      "version": "0.4.0"
+      "version": "0.5.0"
     }
   ]
 }

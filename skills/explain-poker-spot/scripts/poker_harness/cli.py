@@ -6,6 +6,8 @@ explain SPOT.json [--format md|json|brief] [-o OUT]
     Build the explanation for a captured spot.
 dashboard SPOT.json [-o OUT.html]
     Render the spot as a self-contained HTML dashboard.
+inline SPOT.json [-o OUT.html]
+    Render a compact HTML fragment to show inside the chat.
 check SPOT.json EXPLANATION.md
     Score a written explanation against the framework.
 validate SPOT.json
@@ -42,6 +44,10 @@ def main(argv: list[str] | None = None) -> int:
     d = sub.add_parser("dashboard", help="render an HTML dashboard for a spot")
     d.add_argument("spot")
     d.add_argument("-o", "--out", default=None, help="output .html (default: next to the spot)")
+
+    n = sub.add_parser("inline", help="render a compact visual to show inside the chat")
+    n.add_argument("spot")
+    n.add_argument("-o", "--out", default=None, help="output .html fragment (default: stdout)")
 
     c = sub.add_parser("check", help="score a written explanation")
     c.add_argument("spot")
@@ -85,6 +91,18 @@ def main(argv: list[str] | None = None) -> int:
         out = Path(a.out) if a.out else Path(a.spot).with_suffix(".dashboard.html")
         out.write_text(html)
         print(out)
+        return 0
+
+    if a.cmd == "inline":
+        from .inline import render_inline
+
+        spot = load_spot(a.spot)
+        frag = render_inline(spot, explain(spot))
+        if a.out:
+            Path(a.out).write_text(frag)
+            print(a.out)
+        else:
+            sys.stdout.write(frag)
         return 0
 
     if a.cmd == "check":

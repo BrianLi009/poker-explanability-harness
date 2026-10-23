@@ -80,15 +80,25 @@ Use the report's facts, not its template wording; the template sentences are gen
 
 Format for the user: conversational, short paragraphs, a table only where comparing numbers. Lead with the answer to what they asked, then the supporting points. Don't paste the full harness report unless they ask for it; mention which points were covered from inference or missing data, in one line.
 
-### 5. Dashboard
+### 5. Show it in the chat
 
-Render the spot as a visual page to go with the explanation:
+Show a compact visual next to the explanation, inside the chat, by default:
+
+```bash
+python3 <skill-dir>/scripts/harness.py inline spot.json -o inline.html
+```
+
+It writes an HTML fragment sized for the chat (680px, host theme colours, no external requests): one tile per action (the whole range's shape), the 13x13 grid coloured by each class's most-played action with mixed classes faded (postflop: the captured hand rows as strategy bars), a hand panel that opens on the hero hand and shows strategy, per-action EVs and whether it is a border hand when a class is clicked, the opponent's response bar with the break-even fold line, and the first node of each other line.
+
+Where an inline visual tool is available (for example the visualizer's `show_widget`; load its `read_me` first if it asks for that), pass the file's contents unchanged as the widget code, give it a specific snake_case title, and keep all explanation in the reply text, not in the widget. Don't describe what the visual already shows; point at what to click ("click A4s and A5s to compare their EVs").
+
+Build the full dashboard only when the user asks to keep, share or see everything (coverage, card removal tables, every border ladder, rewind), or when no inline tool is available:
 
 ```bash
 python3 <skill-dir>/scripts/harness.py dashboard spot.json -o dashboard.html
 ```
 
-It lays the spot out in the coach's order: takeaway and whole-range bar, the 13x13 grid coloured by action (GTO Wizard's colours, borders outlined, the responder's grid on a second tab), borderline ladders per family, EV at the borders, the response funnel against the break-even fold line, card removal, the other lines, ICM, rewind and coverage. Panels without data are left out. The page is self-contained HTML. Where the Artifact tool is available, publish it as an artifact and say in one line what it shows; otherwise send the file. Set `lesson` in the spot to control the takeaway headline, and `response_path` (players who act before the responder, with their action frequencies) to draw the full funnel.
+It lays the spot out in the coach's order: takeaway and whole-range bar, the 13x13 grid (the responder's grid on a second tab), borderline ladders per family, EV at the borders, the response funnel, card removal, the other lines, ICM, rewind and coverage. Where the Artifact tool is available, publish it as an artifact and say in one line what it shows; otherwise send the file. Set `lesson` in the spot to control the takeaway headline, and `response_path` (players who act before the responder, with their action frequencies) to draw the full funnel.
 
 ### 6. Self-check before sending
 
@@ -126,5 +136,5 @@ python3 <skill-dir>/scripts/harness.py icm --stacks 40 30 20 10 --payouts 50 30 
 - `references/spot-schema.md`: the spot file format.
 - `references/capture-guide.md`: which GTO Wizard tab holds each number.
 - `examples/`: two captured spots with their rendered reports.
-- `scripts/harness.py`: CLI (explain, dashboard, validate, check, board, icm).
+- `scripts/harness.py`: CLI (explain, inline, dashboard, validate, check, board, icm).
 - `scripts/gtowizard_summary.js`: reads every combo from GTO Wizard's Summary tab.
